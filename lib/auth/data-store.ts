@@ -164,4 +164,21 @@ export const mongoUserStore = {
       // ignore
     }
   },
+
+  async findAll() {
+    const col = await users();
+    const docs = await col
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    return docs.map((doc) => ({
+      id: doc._id.toString(),
+      email: doc.email as string,
+      name: (doc.name as string) ?? null,
+      role: (doc.role as string) ?? "user",
+      emailVerified: (doc.emailVerified as Date) ?? null,
+      bannedAt: (doc.bannedAt as Date) ?? null,
+      createdAt: doc.createdAt as Date,
+    }));
+  },
 };

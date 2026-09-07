@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { LuMail, LuLock, LuUser, LuArrowRight, LuLoader, LuCheck, LuCircleAlert } from "react-icons/lu";
+import { LuMail, LuLock, LuUser, LuArrowRight, LuLoader, LuCheck, LuCircleAlert, LuEye, LuEyeOff } from "react-icons/lu";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -29,6 +29,7 @@ interface AuthFormProps {
 export function AuthForm({ mode, callbackUrl = "/dashboard" }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const isLogin = mode === "login";
   const schema = isLogin ? loginSchema : registerSchema;
@@ -162,11 +163,23 @@ export function AuthForm({ mode, callbackUrl = "/dashboard" }: AuthFormProps) {
             <LuLock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
             <input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50"
+              className="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-10 text-sm text-foreground placeholder:text-text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/50"
               {...register("password")}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-foreground"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <LuEyeOff className="h-4 w-4" />
+              ) : (
+                <LuEye className="h-4 w-4" />
+              )}
+            </button>
           </div>
           {errors.password && (
             <p className="mt-1.5 text-xs text-error">

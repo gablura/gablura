@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { getAuthOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import DashboardSidebar from "@/components/dashboard/sidebar";
 
 export default async function DashboardLayout({
   children,
@@ -16,34 +16,11 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border-subtle">
-        <nav className="mx-auto flex h-16 max-w-container items-center justify-between px-container">
-          <Link
-            href="/dashboard"
-            className="text-foreground font-semibold tracking-tight text-lg"
-          >
-            Gablura<span className="text-accent">.</span> Dashboard
-          </Link>
+      <DashboardSidebar />
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {session.user.email}
-            </span>
-            <form action="/api/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
-              >
-                Sign out
-              </button>
-            </form>
-          </div>
-        </nav>
-      </header>
-
-      <main className="mx-auto max-w-container px-container py-10">
-        {children}
-      </main>
+      <div className="lg:pl-64">
+        <main className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+      </div>
     </div>
   );
 }
