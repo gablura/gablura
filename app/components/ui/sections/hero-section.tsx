@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LuCopy, LuCheck } from "react-icons/lu";
+import type { Resource } from "@/types/resources";
 
-const PACKAGES = [
+const FALLBACK_PACKAGES = [
   { name: "@gablura/auth-next", label: "Auth Next" },
   { name: "@gablura/auth-core", label: "Auth Core" },
 ];
@@ -19,13 +20,22 @@ const FEATURES = [
 
 const INTERVAL = 3500;
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  packages: Resource[];
+}
+
+export default function HeroSection({ packages }: HeroSectionProps) {
+  const displayPackages =
+    packages.length > 0
+      ? packages.map((p) => ({ name: p.name, label: p.name }))
+      : FALLBACK_PACKAGES;
+
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
 
   const next = useCallback(() => {
-    setActive((i) => (i + 1) % PACKAGES.length);
-  }, []);
+    setActive((i) => (i + 1) % displayPackages.length);
+  }, [displayPackages.length]);
 
   useEffect(() => {
     const id = setInterval(next, INTERVAL);
@@ -106,11 +116,11 @@ export default function HeroSection() {
             <div className="flex items-center gap-3 rounded-lg border border-border-subtle bg-code-background px-5 py-3.5 text-sm font-mono">
               <span className="text-accent font-semibold shrink-0">$</span>
               <span className="text-foreground truncate">
-                npm install {PACKAGES[active].name}
+                npm install {displayPackages[active]?.name}
               </span>
               <button
                 type="button"
-                onClick={() => copyInstall(PACKAGES[active].name)}
+                onClick={() => copyInstall(displayPackages[active]?.name ?? "")}
                 className="ml-auto shrink-0 rounded p-1 text-text-muted transition-colors hover:text-foreground hover:bg-surface"
                 aria-label="Copy install command"
               >
@@ -124,7 +134,7 @@ export default function HeroSection() {
 
             {/* Dots */}
             <div className="mt-3 flex items-center gap-2">
-              {PACKAGES.map((pkg, i) => (
+              {displayPackages.map((pkg, i) => (
                 <button
                   key={pkg.name}
                   type="button"

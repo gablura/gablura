@@ -7,6 +7,9 @@ import {
   HiOutlineShieldCheck,
   HiOutlineEnvelope,
   HiOutlineArrowRight,
+  HiOutlineCube,
+  HiOutlineWrenchScrewdriver,
+  HiOutlineCommandLine,
 } from "react-icons/hi2";
 import { canManageUsers } from "@/types/roles";
 import type { Role } from "@/types/roles";
@@ -86,27 +89,89 @@ export default async function DashboardPage() {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-muted">
           Quick actions
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {canManageUsers(userRole) && (
-            <Link
-              href="/dashboard/users"
-              className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
-                  <HiOutlineUsers className="size-[18px] text-accent" />
+            <>
+              <Link
+                href="/dashboard/packages"
+                className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
+                    <HiOutlineCube className="size-[18px] text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Packages
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      Manage packages
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Manage users
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    View and manage user roles
-                  </p>
+                <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
+              </Link>
+
+              <Link
+                href="/dashboard/tools"
+                className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
+                    <HiOutlineWrenchScrewdriver className="size-[18px] text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Tools
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      Manage tools
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
-            </Link>
+                <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
+              </Link>
+
+              <Link
+                href="/dashboard/sdks"
+                className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
+                    <HiOutlineCommandLine className="size-[18px] text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      SDKs
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      Manage SDKs
+                    </p>
+                  </div>
+                </div>
+                <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
+              </Link>
+
+              <Link
+                href="/dashboard/users"
+                className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
+                    <HiOutlineUsers className="size-[18px] text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Users
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      Manage user roles
+                    </p>
+                  </div>
+                </div>
+                <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
+              </Link>
+            </>
           )}
 
           <Link

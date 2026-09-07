@@ -1,41 +1,39 @@
 import Link from "next/link";
 
-const CATEGORIES = [
-  {
-    category: "PACKAGES",
-    title: "Auth Core",
-    description:
-      "Authentication and authorization primitives you can compose into any stack.",
-    count: "18 packages",
-    href: "/packages/auth-core",
-  },
-  {
-    category: "SDKs",
-    title: "Node SDK",
-    description:
-      "Type-safe client libraries for every Gablura service, with first-class TypeScript.",
-    count: "4 SDKs",
-    href: "/sdks/node",
-  },
-  {
-    category: "TOOLS",
-    title: "CLI",
-    description:
-      "Develop, test, and ship — one command at a time. Built for real workflows.",
-    count: "v1.0.0",
-    href: "/tools/cli",
-  },
-  {
-    category: "PROJECTS",
-    title: "Focura",
-    description:
-      "Workspace and productivity software built for modern teams. Live at focura.dev.",
-    count: "v0.6.0",
-    href: "/projects/focura",
-  },
-];
+const CATEGORY_META: Record<string, { label: string; href: string }> = {
+  package: { label: "PACKAGES", href: "/packages" },
+  sdk: { label: "SDKs", href: "/sdks" },
+  tool: { label: "TOOLS", href: "/tools" },
+};
 
-export default function EcosystemSection() {
+interface EcosystemSectionProps {
+  counts: Record<string, number>;
+}
+
+export default function EcosystemSection({ counts }: EcosystemSectionProps) {
+  const categories = [
+    {
+      key: "package",
+      title: "Packages",
+      description: "Authentication, authorization, and composable primitives for modern stacks.",
+      count: counts.package ?? 0,
+    },
+    {
+      key: "sdk",
+      title: "SDKs",
+      description: "Type-safe client libraries for every service, with first-class TypeScript.",
+      count: counts.sdk ?? 0,
+    },
+    {
+      key: "tool",
+      title: "Tools",
+      description: "Develop, test, and ship — built for real workflows.",
+      count: counts.tool ?? 0,
+    },
+  ];
+
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
   return (
     <section
       className="border-t border-border-subtle bg-background py-section"
@@ -56,33 +54,42 @@ export default function EcosystemSection() {
           you need, leave the rest.
         </p>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {CATEGORIES.map((item) => (
-            <Link key={item.category} href={item.href} className="group block">
-              <article className="flex h-full flex-col gap-4 rounded-xl border border-border-subtle bg-surface p-6 transition-colors duration-200 hover:border-border hover:bg-surface-hover">
-                <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-muted">
-                  {item.category}
-                </span>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {item.description}
-                  </p>
-                </div>
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-subtle">
-                  <span className="text-xs font-mono text-text-muted tracking-wide">
-                    {item.count}
+        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((cat) => {
+            const meta = CATEGORY_META[cat.key];
+            return (
+              <Link key={cat.key} href={meta.href} className="group block">
+                <article className="flex h-full flex-col gap-4 rounded-xl border border-border-subtle bg-surface p-6 transition-colors duration-200 hover:border-border hover:bg-surface-hover">
+                  <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-muted">
+                    {meta.label}
                   </span>
-                  <span className="text-xs font-medium text-accent">
-                    View →
-                  </span>
-                </div>
-              </article>
-            </Link>
-          ))}
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {cat.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {cat.description}
+                    </p>
+                  </div>
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-subtle">
+                    <span className="text-xs font-mono text-text-muted tracking-wide">
+                      {cat.count} {cat.count === 1 ? "item" : "items"}
+                    </span>
+                    <span className="text-xs font-medium text-accent">
+                      View →
+                    </span>
+                  </div>
+                </article>
+              </Link>
+            );
+          })}
         </div>
+
+        {total > 0 && (
+          <p className="mt-8 text-center text-sm text-text-muted">
+            {total} {total === 1 ? "resource" : "resources"} published across the ecosystem
+          </p>
+        )}
       </div>
     </section>
   );
