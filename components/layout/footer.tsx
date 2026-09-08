@@ -22,7 +22,7 @@ const RESOURCES = [
 
 const COMPANY = [
   { href: "/about", label: "About" },
-  { href: "/about#contact", label: "Contact" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 function formatCount(n: number): string {

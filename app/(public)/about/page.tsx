@@ -19,8 +19,8 @@ export default function AboutPage() {
     <>
       <AboutHero />
       <WhatWeBuild />
-      <EcosystemOverview />
       <EngineeringPrinciples />
+      <EcosystemOverview />
       <WhoBuilds />
       <AboutCta />
     </>
