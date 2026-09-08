@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { changeUserRole, toggleUserBan, deleteUser } from "@/actions/user-management";
+import { changeUserRole, toggleUserBan, banUser } from "@/actions/user-management";
 import { ROLES, ROLE_HIERARCHY } from "@/types/roles";
 import type { Role } from "@/types/roles";
 
@@ -24,8 +24,6 @@ interface UserActionsMenuProps {
   currentRole: Role;
   userName: string | null;
   isBanned: boolean;
-  isOwner: boolean;
-  canDelete: boolean;
   callerRole: Role;
 }
 
@@ -34,10 +32,10 @@ export function UserActionsMenu({
   currentRole,
   userName,
   isBanned,
-  isOwner,
-  canDelete,
   callerRole,
 }: UserActionsMenuProps) {
+  const isOwner = currentRole === "owner";
+  const canDelete = callerRole === "owner";
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -95,7 +93,7 @@ export function UserActionsMenu({
 
   async function handleDelete() {
     if (!confirm(`Are you sure you want to delete ${userName || "this user"}? This cannot be undone.`)) return;
-    const res = await deleteUser(userId);
+    const res = await banUser(userId);
     if (res.error) alert(res.error);
     setOpen(false);
     refresh();

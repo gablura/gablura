@@ -1,5 +1,3 @@
-"use client";
-
 import { UserActionsMenu } from "@/components/dashboard/user-actions-menu";
 import type { Role } from "@/types/roles";
 
@@ -29,7 +27,7 @@ const ROLE_COUNTS = (users: User[]) => {
   return counts;
 };
 
-export function UsersPageClient({
+export default function UsersPageClient({
   users,
   callerRole,
 }: {
@@ -145,8 +143,6 @@ export function UsersPageClient({
                     currentRole={role}
                     userName={user.name}
                     isBanned={isBanned}
-                    isOwner={role === "owner"}
-                    canDelete={callerRole === "owner"}
                     callerRole={callerRole}
                   />
                 </div>
@@ -200,8 +196,6 @@ export function UsersPageClient({
                     currentRole={role}
                     userName={user.name}
                     isBanned={isBanned}
-                    isOwner={role === "owner"}
-                    canDelete={callerRole === "owner"}
                     callerRole={callerRole}
                   />
                 </div>

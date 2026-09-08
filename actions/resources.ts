@@ -2,69 +2,12 @@
 
 import { getServerSession } from "next-auth";
 import { getAuthOptions } from "@/lib/auth";
-import { getDb } from "@/lib/mongodb";
 import { ROLE_HIERARCHY } from "@/types/roles";
 import type { Role } from "@/types/roles";
-import type {
-  Resource,
-  ResourceType,
-  ResourceFormData,
-  ResourceDocumentation,
-} from "@/types/resources";
+import type { Resource, ResourceType, ResourceFormData } from "@/types/resources";
+import { docToResource, getCollection, type ResourceDoc } from "@/lib/resource-helpers";
+import { generateSlug } from "@/lib/slug";
 import { ObjectId } from "mongodb";
-
-interface ResourceDoc {
-  _id?: ObjectId;
-  type: string;
-  name: string;
-  slug: string;
-  description: string;
-  version: string;
-  repositoryUrl: string;
-  documentation: ResourceDocumentation;
-  authorId: string;
-  authorName: string;
-  status: string;
-  featured: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-function docToResource(doc: ResourceDoc): Resource {
-  return {
-    id: doc._id!.toString(),
-    type: doc.type as ResourceType,
-    name: doc.name,
-    slug: doc.slug,
-    description: doc.description,
-    version: doc.version,
-    repositoryUrl: doc.repositoryUrl,
-    documentation: doc.documentation,
-    authorId: doc.authorId,
-    authorName: doc.authorName,
-    status: doc.status as "draft" | "published",
-    featured: doc.featured,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
-  };
-}
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-async function getCollection(type: ResourceType) {
-  const db = await getDb();
-  const collections: Record<ResourceType, string> = {
-    package: "packages",
-    tool: "tools",
-    sdk: "sdks",
-  };
-  return db.collection<ResourceDoc>(collections[type]);
-}
 
 async function authenticate() {
   const session = await getServerSession(await getAuthOptions());
@@ -140,7 +83,7 @@ export async function updateResource(
   const col = await getCollection(type);
   let doc: ResourceDoc | null;
   try {
-    doc = await col.findOne({ _id: new ObjectId(resourceId) });
+    doc = await col.findOne({ _id: new ObjectId(resourceId) }) as ResourceDoc | null;
   } catch {
     return { error: "Invalid resource ID" };
   }
@@ -183,7 +126,7 @@ export async function deleteResource(type: ResourceType, resourceId: string) {
   const col = await getCollection(type);
   let doc: ResourceDoc | null;
   try {
-    doc = await col.findOne({ _id: new ObjectId(resourceId) });
+    doc = await col.findOne({ _id: new ObjectId(resourceId) }) as ResourceDoc | null;
   } catch {
     return { error: "Invalid resource ID" };
   }

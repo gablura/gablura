@@ -74,7 +74,7 @@ export async function toggleUserBan(userId: string) {
   return { success: true };
 }
 
-export async function deleteUser(userId: string) {
+export async function banUser(userId: string) {
   const session = await getServerSession(await getAuthOptions());
   if (!session?.user) return { error: "Unauthorized" };
 

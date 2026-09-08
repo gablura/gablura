@@ -1,54 +1,8 @@
-import { getDb } from "@/lib/mongodb";
-import type { Resource, ResourceType, ResourceDocumentation } from "@/types/resources";
+import { docToResource, getCollection } from "@/lib/resource-helpers";
+import type { Resource, ResourceType } from "@/types/resources";
 import { unstable_cache as cache } from "next/cache";
 
-interface ResourceDoc {
-  _id: { toString(): string };
-  type: string;
-  name: string;
-  slug: string;
-  description: string;
-  version: string;
-  repositoryUrl: string;
-  documentation: ResourceDocumentation;
-  authorId: string;
-  authorName: string;
-  status: string;
-  featured: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-function docToResource(doc: ResourceDoc): Resource {
-  return {
-    id: doc._id.toString(),
-    type: doc.type as ResourceType,
-    name: doc.name,
-    slug: doc.slug,
-    description: doc.description,
-    version: doc.version,
-    repositoryUrl: doc.repositoryUrl,
-    documentation: doc.documentation,
-    authorId: doc.authorId,
-    authorName: doc.authorName,
-    status: doc.status as "draft" | "published",
-    featured: doc.featured,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
-  };
-}
-
-async function getCollection(type: ResourceType) {
-  const db = await getDb();
-  const collections: Record<ResourceType, string> = {
-    package: "packages",
-    tool: "tools",
-    sdk: "sdks",
-  };
-  return db.collection<ResourceDoc>(collections[type]);
-}
-
-export async function getPublishedResources(type: ResourceType): Promise<Resource[]> {
+async function getPublishedResources(type: ResourceType): Promise<Resource[]> {
   const col = await getCollection(type);
   const docs = await col
     .find({ status: "published" })
@@ -57,7 +11,7 @@ export async function getPublishedResources(type: ResourceType): Promise<Resourc
   return docs.map(docToResource);
 }
 
-export async function getFeaturedPackage(): Promise<Resource | null> {
+async function getFeaturedPackage(): Promise<Resource | null> {
   const col = await getCollection("package");
   const doc = await col.findOne(
     { status: "published", featured: true },
@@ -72,12 +26,14 @@ export async function getFeaturedPackage(): Promise<Resource | null> {
   return fallback ? docToResource(fallback) : null;
 }
 
-export async function getPublishedCounts(): Promise<Record<ResourceType, number>> {
-  const db = await getDb();
+async function getPublishedCounts(): Promise<Record<ResourceType, number>> {
+  const col1 = await getCollection("package");
+  const col2 = await getCollection("tool");
+  const col3 = await getCollection("sdk");
   const [packages, tools, sdks] = await Promise.all([
-    db.collection("packages").countDocuments({ status: "published" }),
-    db.collection("tools").countDocuments({ status: "published" }),
-    db.collection("sdks").countDocuments({ status: "published" }),
+    col1.countDocuments({ status: "published" }),
+    col2.countDocuments({ status: "published" }),
+    col3.countDocuments({ status: "published" }),
   ]);
   return { package: packages, tool: tools, sdk: sdks };
 }

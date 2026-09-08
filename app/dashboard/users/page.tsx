@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { HiOutlineShieldCheck } from "react-icons/hi2";
 import { canManageUsers } from "@/types/roles";
 import type { Role } from "@/types/roles";
-import { UsersPageClient } from "./users-page-client";
+import UsersPageClient from "./users-page-client";
 
 export default async function UsersPage() {
   const session = await getServerSession(await getAuthOptions());

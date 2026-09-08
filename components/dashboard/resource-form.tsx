@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createResource, updateResource } from "@/actions/resources";
+import { generateSlug } from "@/lib/slug";
 import type {
   ResourceType,
   Resource,
@@ -41,13 +42,6 @@ function toFormData(resource?: Resource | null): ResourceFormData {
       changelog: resource?.documentation?.changelog ?? "",
     },
   };
-}
-
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 type Tab = "basic" | "docs";
