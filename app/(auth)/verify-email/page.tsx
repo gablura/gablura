@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { VerifyEmailForm } from "../components/verify-email-form";
+import { VerifyEmailForm } from "@/features/auth/components/verify-email-form";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();

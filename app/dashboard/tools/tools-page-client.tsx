@@ -4,8 +4,8 @@ import { useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";
 import type { Resource } from "@/types/resources";
 import type { Role } from "@/types/roles";
-import ResourceTable from "@/components/dashboard/resource-table";
-import ResourceForm from "@/components/dashboard/resource-form";
+import ResourceTable from "@/features/dashboard/components/resource-table";
+import ResourceForm from "@/features/dashboard/components/resource-form";
 
 export default function ToolsPageClient({
   resources,

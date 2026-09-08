@@ -1,4 +1,4 @@
-import { UserActionsMenu } from "@/components/dashboard/user-actions-menu";
+import { UserActionsMenu } from "@/features/dashboard/components/user-actions-menu";
 import type { Role } from "@/types/roles";
 
 interface User {

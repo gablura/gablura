@@ -1,13 +1,13 @@
 import { getCachedPublishedCounts, getCachedFeaturedPackage, getCachedLatestPackages } from "@/lib/resources";
-import Navbar from "./components/navbar";
-import Footer from "./components/footer";
-import HeroSection from "./components/ui/sections/hero-section";
-import EcosystemSection from "./components/ui/sections/ecosystem-section";
-import FeaturedPackageSection from "./components/ui/sections/featured-package-section";
-import WhySection from "./components/ui/sections/why-section";
-import ProjectsSection from "./components/ui/sections/projects-section";
-import EngineeringPrinciplesSection from "./components/ui/sections/engineering-principles-section";
-import FinalCtaSection from "./components/ui/sections/final-cta-section";
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import HeroSection from "@/features/marketing/sections/hero-section";
+import EcosystemSection from "@/features/marketing/sections/ecosystem-section";
+import FeaturedPackageSection from "@/features/marketing/sections/featured-package-section";
+import WhySection from "@/features/marketing/sections/why-section";
+import ProjectsSection from "@/features/marketing/sections/projects-section";
+import EngineeringPrinciplesSection from "@/features/marketing/sections/engineering-principles-section";
+import FinalCtaSection from "@/features/marketing/sections/final-cta-section";
 
 export const revalidate = 60;
 
