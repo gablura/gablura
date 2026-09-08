@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { SiGithub } from "react-icons/si";
 
 const NAV_LINKS = [
-  { href: "#products", label: "Products" },
-  { href: "#docs", label: "Docs" },
-  { href: "#projects", label: "Projects" },
-  { href: "#about", label: "About" },
+  { href: "/packages", label: "Packages" },
+  { href: "/sdks", label: "SDKs" },
+  { href: "/tools", label: "Tools" },
+  { href: "/about", label: "About" },
 ];
 
 export default function Navbar() {
@@ -45,28 +46,30 @@ export default function Navbar() {
       }}
     >
       <nav
-        className="mx-auto flex h-16 max-w-container items-center justify-between px-container"
+        className="mx-auto flex h-14 max-w-container items-center justify-between px-container sm:h-16"
         aria-label="Primary"
       >
         {/* Logo */}
-        <a href="#" className="group relative flex items-center gap-1.5">
+        <Link href="/" className="group relative flex items-center gap-1.5">
           <span className="text-foreground font-semibold tracking-tight text-lg">
             Gablura
           </span>
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent transition-transform duration-200 group-hover:scale-125" />
-        </a>
+        </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden items-center gap-1 sm:flex" aria-label="Main">
+        {/* Desktop nav — pill style */}
+        <div
+          className="hidden items-center gap-0.5 rounded-full border border-border-subtle bg-surface/50 px-1 py-1 sm:flex"
+          aria-label="Main"
+        >
           {NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
-              className="relative px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="relative rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-surface-elevated"
             >
               {link.label}
-              <span className="absolute inset-x-3 -bottom-px h-px origin-left scale-x-0 bg-accent transition-transform duration-200 ease-out group-hover:scale-x-100" />
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -120,7 +123,7 @@ export default function Navbar() {
       {/* Full-screen mobile menu */}
       <div
         id="mobile-menu"
-        className={`fixed inset-0 top-16 z-40 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] sm:hidden ${
+        className={`fixed inset-0 top-14 z-40 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] sm:hidden ${
           mobileOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
@@ -144,7 +147,7 @@ export default function Navbar() {
         >
           <div className="flex flex-col gap-1 pt-6 pb-4">
             {NAV_LINKS.map((link, i) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
@@ -156,7 +159,7 @@ export default function Navbar() {
                 }}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
 
