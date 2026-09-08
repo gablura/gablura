@@ -12,6 +12,7 @@ export default async function ToolsPage() {
   if (!session) redirect("/login");
 
   const userRole = (session.user?.role ?? "user") as Role;
+  const userId = session.user?.id as string;
   if (userRole !== "owner" && userRole !== "admin") redirect("/dashboard");
 
   const resources = await getResources("tool");
@@ -27,12 +28,18 @@ export default async function ToolsPage() {
             {RESOURCE_TYPE_SINGULAR.tool}s
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage your tools
+            {userRole === "owner"
+              ? "Manage all tools"
+              : "Manage your tools"}
           </p>
         </div>
       </div>
 
-      <ToolsPageClient resources={resources} callerRole={userRole} />
+      <ToolsPageClient
+        resources={resources}
+        callerRole={userRole}
+        callerId={userId}
+      />
     </div>
   );
 }

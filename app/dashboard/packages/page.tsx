@@ -12,6 +12,7 @@ export default async function PackagesPage() {
   if (!session) redirect("/login");
 
   const userRole = (session.user?.role ?? "user") as Role;
+  const userId = session.user?.id as string;
   if (userRole !== "owner" && userRole !== "admin") redirect("/dashboard");
 
   const resources = await getResources("package");
@@ -27,12 +28,18 @@ export default async function PackagesPage() {
             {RESOURCE_TYPE_SINGULAR.package}s
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage your packages
+            {userRole === "owner"
+              ? "Manage all packages"
+              : "Manage your packages"}
           </p>
         </div>
       </div>
 
-      <PackagesPageClient resources={resources} callerRole={userRole} />
+      <PackagesPageClient
+        resources={resources}
+        callerRole={userRole}
+        callerId={userId}
+      />
     </div>
   );
 }

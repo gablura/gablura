@@ -12,6 +12,7 @@ export default async function SdksPage() {
   if (!session) redirect("/login");
 
   const userRole = (session.user?.role ?? "user") as Role;
+  const userId = session.user?.id as string;
   if (userRole !== "owner" && userRole !== "admin") redirect("/dashboard");
 
   const resources = await getResources("sdk");
@@ -27,12 +28,18 @@ export default async function SdksPage() {
             {RESOURCE_TYPE_SINGULAR.sdk}s
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage your SDKs
+            {userRole === "owner"
+              ? "Manage all SDKs"
+              : "Manage your SDKs"}
           </p>
         </div>
       </div>
 
-      <SdksPageClient resources={resources} callerRole={userRole} />
+      <SdksPageClient
+        resources={resources}
+        callerRole={userRole}
+        callerId={userId}
+      />
     </div>
   );
 }

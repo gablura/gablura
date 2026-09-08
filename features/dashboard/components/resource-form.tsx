@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createResource, updateResource } from "@/actions/resources";
@@ -54,12 +54,20 @@ export default function ResourceForm({
 }: ResourceFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [form, setForm] = useState<ResourceFormData>(toFormData());
+  const [form, setForm] = useState<ResourceFormData>(toFormData(resource));
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("basic");
 
   const isEdit = !!resource;
   const formKey = `${type}-${resource?.id ?? "new"}-${open ? "open" : "closed"}`;
+
+  useEffect(() => {
+    if (open) {
+      setForm(toFormData(resource));
+      setError(null);
+      setActiveTab("basic");
+    }
+  }, [open, resource]);
 
   function updateField<K extends keyof ResourceFormData>(
     key: K,

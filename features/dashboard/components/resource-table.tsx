@@ -4,23 +4,22 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteResource } from "@/actions/resources";
 import type { Resource, ResourceType } from "@/types/resources";
+import type { Role } from "@/types/roles";
+import { canEditResource, canDeleteResource } from "@/types/roles";
 import ResourceForm from "./resource-form";
 
 interface ResourceTableProps {
   type: ResourceType;
   resources: Resource[];
-  callerRole: "owner" | "admin" | "moderator" | "user";
-}
-
-function canEdit(callerRole: string, resource: Resource, callerId?: string): boolean {
-  if (callerRole === "owner") return true;
-  return resource.authorId === callerId;
+  callerRole: Role;
+  callerId?: string;
 }
 
 export default function ResourceTable({
   type,
   resources,
   callerRole,
+  callerId,
 }: ResourceTableProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -67,7 +66,8 @@ export default function ResourceTable({
 
         <div className="divide-y divide-border-subtle">
           {resources.map((resource) => {
-            const isOwner = canEdit(callerRole, resource);
+            const canEdit = canEditResource(callerRole, callerId ?? "", resource.authorId);
+            const canDelete = canDeleteResource(callerRole, callerId ?? "", resource.authorId);
             const updatedDate = new Date(resource.updatedAt).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -111,17 +111,19 @@ export default function ResourceTable({
                 <span className="text-xs text-text-muted">{updatedDate}</span>
 
                 <div className="relative flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setEditResource(resource)}
-                    className="flex size-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
-                    aria-label="Edit"
-                  >
-                    <svg className="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                    </svg>
-                  </button>
-                  {isOwner && (
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => setEditResource(resource)}
+                      className="flex size-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+                      aria-label="Edit"
+                    >
+                      <svg className="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                      </svg>
+                    </button>
+                  )}
+                  {canDelete && (
                     <button
                       type="button"
                       onClick={() => handleDelete(resource.id)}
@@ -149,7 +151,8 @@ export default function ResourceTable({
       {/* Mobile cards */}
       <div className="space-y-3 lg:hidden">
         {resources.map((resource) => {
-          const isOwner = canEdit(callerRole, resource);
+          const canEdit = canEditResource(callerRole, callerId ?? "", resource.authorId);
+          const canDelete = canDeleteResource(callerRole, callerId ?? "", resource.authorId);
           const updatedDate = new Date(resource.updatedAt).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -179,17 +182,19 @@ export default function ResourceTable({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setEditResource(resource)}
-                    className="flex size-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
-                    aria-label="Edit"
-                  >
-                    <svg className="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                    </svg>
-                  </button>
-                  {isOwner && (
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => setEditResource(resource)}
+                      className="flex size-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+                      aria-label="Edit"
+                    >
+                      <svg className="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                      </svg>
+                    </button>
+                  )}
+                  {canDelete && (
                     <button
                       type="button"
                       onClick={() => handleDelete(resource.id)}

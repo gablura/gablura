@@ -51,7 +51,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/users",
     label: "Users",
     icon: HiOutlineUsers,
-    roles: ["owner", "admin"],
+    roles: ["owner"],
   },
 ];
 

@@ -70,3 +70,74 @@ export const getCachedLatestPackages = cache(
   ["home", "latest-packages"],
   { revalidate: 60, tags: ["resources"] }
 );
+
+export function getCachedPublishedByType(type: ResourceType) {
+  return cache(
+    () => getPublishedResources(type),
+    ["resources", type],
+    { revalidate: 60, tags: ["resources"] }
+  )();
+}
+
+async function getResourceBySlug(
+  type: ResourceType,
+  slug: string
+): Promise<Resource | null> {
+  const col = await getCollection(type);
+  const doc = await col.findOne({ slug, status: "published" });
+  return doc ? docToResource(doc) : null;
+}
+
+export function getCachedResourceBySlug(type: ResourceType, slug: string) {
+  return cache(
+    () => getResourceBySlug(type, slug),
+    ["resource", type, slug],
+    { revalidate: 60, tags: ["resources"] }
+  )();
+}
+
+async function getRelatedResources(
+  type: ResourceType,
+  currentSlug: string,
+  limit: number = 3
+): Promise<Resource[]> {
+  const col = await getCollection(type);
+  const docs = await col
+    .find({ status: "published", slug: { $ne: currentSlug } })
+    .sort({ featured: -1, createdAt: -1 })
+    .limit(limit)
+    .toArray();
+  return docs.map(docToResource);
+}
+
+export function getCachedRelatedResources(
+  type: ResourceType,
+  currentSlug: string
+) {
+  return cache(
+    () => getRelatedResources(type, currentSlug),
+    ["related", type, currentSlug],
+    { revalidate: 60, tags: ["resources"] }
+  )();
+}
+
+async function getFeaturedResources(
+  limit: number = 6
+): Promise<Resource[]> {
+  const types: ResourceType[] = ["package", "sdk", "tool"];
+  const results = await Promise.all(
+    types.map((type) => getPublishedResources(type))
+  );
+  const all = results.flat();
+  all.sort((a, b) => {
+    if (a.featured !== b.featured) return a.featured ? -1 : 1;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+  return all.slice(0, limit);
+}
+
+export const getCachedFeaturedResources = cache(
+  () => getFeaturedResources(6),
+  ["ecosystem", "featured-resources"],
+  { revalidate: 60, tags: ["resources"] }
+);

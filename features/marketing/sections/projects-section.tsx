@@ -3,14 +3,14 @@ import type { Resource } from "@/types/resources";
 
 const TYPE_COLORS: Record<string, string> = {
   package: "text-accent",
-  sdk: "text-info",
-  tool: "text-warning",
+  sdk: "text-accent",
+  tool: "text-accent",
 };
 
 const TYPE_BG: Record<string, string> = {
   package: "bg-accent-muted border-accent/15",
-  sdk: "bg-info-muted border-info/15",
-  tool: "bg-warning-muted border-warning/15",
+  sdk: "bg-accent-muted border-accent/15",
+  tool: "bg-accent-muted border-accent/15",
 };
 
 interface ProjectsSectionProps {

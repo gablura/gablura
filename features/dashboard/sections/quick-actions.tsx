@@ -6,7 +6,7 @@ import {
   HiOutlineWrenchScrewdriver,
   HiOutlineCommandLine,
 } from "react-icons/hi2";
-import { canManageUsers } from "@/types/roles";
+import { canManageResources } from "@/types/roles";
 import type { Role } from "@/types/roles";
 
 interface QuickActionsProps {
@@ -20,7 +20,7 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
         Quick actions
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {canManageUsers(userRole) && (
+        {canManageResources(userRole) && (
           <>
             <Link
               href="/dashboard/packages"
@@ -81,27 +81,29 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
               </div>
               <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
             </Link>
-
-            <Link
-              href="/dashboard/users"
-              className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
-                  <HiOutlineUsers className="size-[18px] text-accent" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Users
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    Manage user roles
-                  </p>
-                </div>
-              </div>
-              <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
-            </Link>
           </>
+        )}
+
+        {userRole === "owner" && (
+          <Link
+            href="/dashboard/users"
+            className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
+                <HiOutlineUsers className="size-[18px] text-accent" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Users
+                </p>
+                <p className="text-xs text-text-muted">
+                  Manage user roles
+                </p>
+              </div>
+            </div>
+            <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
+          </Link>
         )}
 
         <Link

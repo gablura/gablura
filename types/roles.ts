@@ -21,3 +21,25 @@ export function hasMinimumRole(userRole: Role, requiredRole: Role): boolean {
 export function canManageUsers(role: Role): boolean {
   return role === "owner" || role === "admin";
 }
+
+export function canManageResources(role: Role): boolean {
+  return role === "owner" || role === "admin";
+}
+
+export function canEditResource(
+  callerRole: Role,
+  callerId: string,
+  resourceAuthorId: string
+): boolean {
+  if (callerRole === "owner") return true;
+  return resourceAuthorId === callerId;
+}
+
+export function canDeleteResource(
+  callerRole: Role,
+  callerId: string,
+  resourceAuthorId: string
+): boolean {
+  if (callerRole === "owner") return true;
+  return resourceAuthorId === callerId;
+}

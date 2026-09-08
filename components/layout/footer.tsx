@@ -10,6 +10,7 @@ interface FooterProps {
 }
 
 const PRODUCTS = [
+  { href: "/ecosystem", label: "Ecosystem" },
   { href: "/packages", label: "Packages" },
   { href: "/sdks", label: "SDKs" },
   { href: "/tools", label: "Tools" },

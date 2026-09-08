@@ -29,8 +29,14 @@ export async function getResources(type: ResourceType) {
   if (!caller) return [];
 
   const col = await getCollection(type);
-  const query: Record<string, unknown> =
-    caller.role === "owner" ? {} : { authorId: caller.id };
+  let query: Record<string, unknown>;
+  if (caller.role === "owner") {
+    query = {};
+  } else if (caller.role === "admin") {
+    query = { $or: [{ authorId: caller.id }, { authorId: "system" }] };
+  } else {
+    query = { authorId: caller.id };
+  }
   const docs = await col.find(query).sort({ createdAt: -1 }).toArray();
   return docs.map(docToResource);
 }

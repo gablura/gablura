@@ -10,9 +10,11 @@ import ResourceForm from "@/features/dashboard/components/resource-form";
 export default function SdksPageClient({
   resources,
   callerRole,
+  callerId,
 }: {
   resources: Resource[];
   callerRole: Role;
+  callerId?: string;
 }) {
   const [formOpen, setFormOpen] = useState(false);
 
@@ -36,6 +38,7 @@ export default function SdksPageClient({
         type="sdk"
         resources={resources}
         callerRole={callerRole}
+        callerId={callerId}
       />
 
       <ResourceForm

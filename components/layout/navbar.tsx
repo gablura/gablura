@@ -5,11 +5,11 @@ import Link from "next/link";
 import { SiGithub } from "react-icons/si";
 
 const NAV_LINKS = [
+  { href: "/ecosystem", label: "Ecosystem" },
   { href: "/packages", label: "Packages" },
   { href: "/sdks", label: "SDKs" },
   { href: "/tools", label: "Tools" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export default function Navbar() {

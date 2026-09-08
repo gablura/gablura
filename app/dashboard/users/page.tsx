@@ -3,7 +3,6 @@ import { getAuthOptions } from "@/lib/auth";
 import { mongoUserStore } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { HiOutlineShieldCheck } from "react-icons/hi2";
-import { canManageUsers } from "@/types/roles";
 import type { Role } from "@/types/roles";
 import UsersPageClient from "./users-page-client";
 
@@ -16,7 +15,7 @@ export default async function UsersPage() {
 
   const userRole = (session.user?.role ?? "user") as Role;
 
-  if (!canManageUsers(userRole)) {
+  if (userRole !== "owner") {
     redirect("/dashboard");
   }
 
