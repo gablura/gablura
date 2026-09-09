@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SiGithub } from "react-icons/si";
+import { ThemeToggle } from "./theme-toggle";
 
 const NAV_LINKS = [
   { href: "/ecosystem", label: "Ecosystem" },
@@ -97,6 +98,9 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {/* Theme toggle */}
+            <ThemeToggle />
+
             {/* GitHub */}
             <a
               href="https://github.com/gablura"
@@ -197,21 +201,24 @@ export default function Navbar() {
           </div>
 
           <div className="border-t border-border-subtle pt-4 pb-6">
-            <a
-              href="https://github.com/gablura"
-              onClick={() => setMobileOpen(false)}
-              className="inline-flex items-center gap-3 rounded-full border border-border bg-surface px-5 py-3 text-base font-medium text-foreground transition-all duration-200 hover:bg-surface-elevated hover:border-border-strong"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                transitionDelay: mobileOpen ? `${NAV_LINKS.length * 50}ms` : "0ms",
-                opacity: mobileOpen ? 1 : 0,
-                transform: mobileOpen ? "translateY(0)" : "translateY(12px)",
-              }}
-            >
-              <SiGithub className="h-5 w-5" />
-              View on GitHub
-            </a>
+            <div className="flex items-center gap-3">
+              <ThemeToggle className="h-11 w-11 shrink-0" />
+              <a
+                href="https://github.com/gablura"
+                onClick={() => setMobileOpen(false)}
+                className="inline-flex flex-1 items-center justify-center gap-3 rounded-full border border-border bg-surface px-5 py-3 text-base font-medium text-foreground transition-all duration-200 hover:bg-surface-elevated hover:border-border-strong"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  transitionDelay: mobileOpen ? `${NAV_LINKS.length * 50}ms` : "0ms",
+                  opacity: mobileOpen ? 1 : 0,
+                  transform: mobileOpen ? "translateY(0)" : "translateY(12px)",
+                }}
+              >
+                <SiGithub className="h-5 w-5" />
+                View on GitHub
+              </a>
+            </div>
           </div>
         </nav>
       </div>

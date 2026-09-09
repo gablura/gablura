@@ -5,15 +5,15 @@
 /*
  * Gablura Design Tokens
  *
- * Dark-first: `:root` carries the dark theme (primary experience);
- * light mode is an explicit `prefers-color-scheme: light` override.
+ * Theme is class-controlled via `.dark` / `.light` on <html>.
+ * A small inline script in root layout prevents flash.
  *
  * All values are semantic tokens exposed as Tailwind utilities via
  * `@theme inline`. Never reference raw hex values in components.
  */
 
-/* ── Dark theme (primary) ─────────────────────────────────────────── */
-:root {
+/* ── Dark theme (default) ────────────────────────────────────────── */
+.dark, :root {
   /* Base */
   --background: #09090b;
   --surface: #131316;
@@ -76,58 +76,56 @@
 }
 
 /* ── Light theme ──────────────────────────────────────────────────── */
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #ffffff;
-    --surface: #fafafa;
-    --surface-elevated: #f4f4f5;
-    --surface-hover: #f1f1f3;
+.light {
+  --background: #ffffff;
+  --surface: #fafafa;
+  --surface-elevated: #f4f4f5;
+  --surface-hover: #f1f1f3;
 
-    --border-subtle: #e8e8ec;
-    --border: #d4d4d8;
-    --border-strong: #a1a1aa;
+  --border-subtle: #e8e8ec;
+  --border: #d4d4d8;
+  --border-strong: #a1a1aa;
 
-    --foreground: #18181b;
-    --muted-foreground: #52525b;
-    --text-muted: #71717a;
-    --disabled: #a1a1aa;
+  --foreground: #18181b;
+  --muted-foreground: #52525b;
+  --text-muted: #71717a;
+  --disabled: #a1a1aa;
 
-    --code-background: #f4f4f5;
+  --code-background: #f4f4f5;
 
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
-    --accent-muted: #eef2ff;
-    --accent-border: #c7d2fe;
-    --accent-foreground: #ffffff;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-muted: #eef2ff;
+  --accent-border: #c7d2fe;
+  --accent-foreground: #ffffff;
 
-    --success: #16a34a;
-    --success-foreground: #15803d;
-    --success-muted: #f0fdf4;
-    --success-border: #bbf7d0;
+  --success: #16a34a;
+  --success-foreground: #15803d;
+  --success-muted: #f0fdf4;
+  --success-border: #bbf7d0;
 
-    --warning: #d97706;
-    --warning-foreground: #b45309;
-    --warning-muted: #fffbeb;
-    --warning-border: #fde68a;
+  --warning: #d97706;
+  --warning-foreground: #b45309;
+  --warning-muted: #fffbeb;
+  --warning-border: #fde68a;
 
-    --error: #dc2626;
-    --error-foreground: #b91c1c;
-    --error-muted: #fef2f2;
-    --error-border: #fecaca;
+  --error: #dc2626;
+  --error-foreground: #b91c1c;
+  --error-muted: #fef2f2;
+  --error-border: #fecaca;
 
-    --info: #2563eb;
-    --info-foreground: #1d4ed8;
-    --info-muted: #eff6ff;
-    --info-border: #bfdbfe;
+  --info: #2563eb;
+  --info-foreground: #1d4ed8;
+  --info-muted: #eff6ff;
+  --info-border: #bfdbfe;
 
-    --primary: var(--accent);
-    --primary-foreground: var(--accent-foreground);
-    --secondary: var(--surface-elevated);
-    --secondary-foreground: var(--foreground);
-    --destructive: var(--error);
-    --destructive-foreground: #ffffff;
-    --ring: oklch(0.556 0 0);
-  }
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--surface-elevated);
+  --secondary-foreground: var(--foreground);
+  --destructive: var(--error);
+  --destructive-foreground: #ffffff;
+  --ring: oklch(0.556 0 0);
 }
 
 /*
@@ -252,10 +250,8 @@
     font-family: var(--font-sans);
   }
 
-  @media (prefers-color-scheme: light) {
-    html {
-      color-scheme: light;
-    }
+  html.light {
+    color-scheme: light;
   }
 
   body {
