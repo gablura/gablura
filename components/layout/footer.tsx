@@ -24,6 +24,7 @@ const RESOURCES = [
 
 const COMPANY = [
   { href: "/about", label: "About" },
+  { href: "/join", label: "Developers" },
   { href: "/contact", label: "Contact" },
 ] as const;
 

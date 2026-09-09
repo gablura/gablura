@@ -30,8 +30,16 @@ export default function FinalCtaSection() {
               </svg>
             </Button>
           </Link>
+          <Link href="/join">
+            <Button variant="secondary" size="lg" className="rounded-lg px-7 gap-2">
+              Join the Waitlist
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </Button>
+          </Link>
           <Link href="/ecosystem">
-            <Button variant="secondary" size="lg" className="rounded-lg px-7">
+            <Button variant="ghost" size="lg" className="rounded-lg px-7">
               Explore the Ecosystem
             </Button>
           </Link>

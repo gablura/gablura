@@ -9,6 +9,7 @@ import {
   HiOutlineWrenchScrewdriver,
   HiOutlineCommandLine,
   HiOutlineBuildingLibrary,
+  HiOutlineUserGroup,
 } from "react-icons/hi2";
 import type { Role } from "@/types/roles";
 
@@ -54,6 +55,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/users",
     label: "Users",
     icon: HiOutlineUsers,
+    roles: ["owner"],
+  },
+  {
+    href: "/dashboard/developers",
+    label: "Developers",
+    icon: HiOutlineUserGroup,
     roles: ["owner"],
   },
 ];
