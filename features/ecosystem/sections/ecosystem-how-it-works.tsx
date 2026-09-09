@@ -70,11 +70,11 @@ export default function EcosystemHowItWorks() {
           ))}
         </div>
 
-        <div className="mt-12 flex items-center gap-3 rounded-xl border border-border-subtle bg-background p-5">
+        <div className="mt-12 flex items-center flex-wrap gap-3 rounded-xl border border-border-subtle bg-background p-5">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
             <HiOutlineCommandLine className="size-5 text-accent" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 sm:flex-1">
             <p className="text-sm font-medium text-foreground">
               Ready to explore?
             </p>

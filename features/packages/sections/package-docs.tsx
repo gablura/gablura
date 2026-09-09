@@ -34,13 +34,13 @@ export default function PackageDocs({ pkg }: PackageDocsProps) {
         </h2>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 rounded-lg border border-border-subtle bg-surface p-1">
+        <div className="flex items-center flex-wrap gap-1 rounded-lg border border-border-subtle bg-surface p-1">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`relative rounded-md px-4 py-2 text-sm font-medium transition-colors duration-150 ${
+              className={`relative rounded-md px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium transition-colors duration-150 ${
                 activeTab === tab.key
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
