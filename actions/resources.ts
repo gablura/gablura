@@ -1,124 +1,369 @@
 "use server";
 
-import { ROLE_HIERARCHY } from "@/types/roles";
-import type { Resource, ResourceType, ResourceFormData } from "@/types/resources";
-import { authenticate, canModify, buildRoleQuery } from "@/lib/auth-helpers";
-import { docToResource, getCollection, type ResourceDoc } from "@/lib/resource-helpers";
-import { generateSlug } from "@/lib/slug";
-import { ObjectId } from "mongodb";
+import { revalidatePath } from "next/cache";
+import { authenticate, canModify } from "@/lib/auth-helpers";
+import { hasPermission } from "@/lib/permissions";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { checkIdempotency, recordIdempotency } from "@/lib/idempotency";
+import { startTrace, endTrace, structuredLog } from "@/lib/trace";
+import { createResourceSchema, updateResourceSchema } from "@/features/resources/schemas/resource-schema";
+import * as resourceService from "@/features/resources/services/resource-service";
+import type { ResourceType, ResourceFormData } from "@/types/resources";
+import type { ResourceListItem } from "@/features/resources/dtos/resource-dto";
+import type { ActionResult } from "@/types/action-result";
 
-export async function getResources(type: ResourceType) {
-  const caller = await authenticate();
-  if (!caller) return [];
+export async function getResources(
+  type: ResourceType
+): Promise<ActionResult<ResourceListItem[]>> {
+  const trace = startTrace();
+  try {
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
 
-  const col = await getCollection(type);
-  const query = buildRoleQuery(caller.role, caller.id);
-  const docs = await col.find(query).sort({ createdAt: -1 }).toArray();
-  return docs.map(docToResource);
+    const resources = await resourceService.listByRole(type, caller);
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "getResources",
+      userId: caller.id,
+      durationMs,
+      message: "Resources fetched",
+    });
+    return { success: true, data: resources };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "getResources",
+      durationMs,
+      message: "Failed to fetch resources",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[getResources]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to fetch resources",
+    };
+  }
 }
 
-export async function createResource(type: ResourceType, data: ResourceFormData) {
-  const caller = await authenticate();
-  if (!caller) return { error: "Unauthorized" };
+export async function createResource(
+  type: ResourceType,
+  formData: ResourceFormData
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
+  try {
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
 
-  if (ROLE_HIERARCHY[caller.role] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
+    // 2. Authorization
+    if (!hasPermission(caller.role, "resources.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`resource:create:${caller.id}`, "write");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Input validation
+    const validated = createResourceSchema.safeParse(formData);
+    if (!validated.success) {
+      const fieldErrors: Record<string, string[]> = {};
+      for (const issue of validated.error.issues) {
+        const field = issue.path[0] as string;
+        if (field) {
+          if (!fieldErrors[field]) fieldErrors[field] = [];
+          fieldErrors[field].push(issue.message);
+        }
+      }
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        error: "Please fix the errors below",
+        fieldErrors,
+      };
+    }
+
+    // 5. Idempotency check
+    const { isDuplicate, existingResourceId } = await checkIdempotency(
+      caller.id,
+      `create:${type}`,
+      validated.data as unknown as Record<string, unknown>
+    );
+    if (isDuplicate && existingResourceId) {
+      return { success: true, data: { id: existingResourceId } };
+    }
+
+    // 6. Service call
+    const id = await resourceService.create(type, validated.data, caller);
+
+    // 7. Record idempotency
+    await recordIdempotency(
+      caller.id,
+      `create:${type}`,
+      validated.data as unknown as Record<string, unknown>,
+      id
+    );
+
+    // 8. Cache revalidation
+    revalidatePath("/dashboard");
+    revalidatePath(`/${type}s`);
+
+    // 9. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "createResource",
+      userId: caller.id,
+      resourceId: id,
+      durationMs,
+      message: "Resource created",
+    });
+    return { success: true, data: { id } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "createResource",
+      durationMs,
+      message: "Failed to create resource",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[createResource]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to create resource",
+    };
   }
-
-  if (!data.name.trim()) return { error: "Name is required" };
-
-  const slug = data.slug.trim() || generateSlug(data.name);
-  const now = new Date();
-
-  const col = await getCollection(type);
-  await col.insertOne({
-    type,
-    name: data.name.trim(),
-    slug,
-    description: data.description.trim(),
-    version: data.version.trim() || "0.1.0",
-    repositoryUrl: data.repositoryUrl.trim(),
-    documentation: data.documentation,
-    authorId: caller.id,
-    authorName: caller.name,
-    status: data.status,
-    featured: data.featured,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  return { success: true };
 }
 
 export async function updateResource(
   type: ResourceType,
   resourceId: string,
-  data: ResourceFormData
-) {
-  const caller = await authenticate();
-  if (!caller) return { error: "Unauthorized" };
-
-  if (ROLE_HIERARCHY[caller.role] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
-  }
-
-  const col = await getCollection(type);
-  let doc: ResourceDoc | null;
+  formData: ResourceFormData
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
   try {
-    doc = await col.findOne({ _id: new ObjectId(resourceId) }) as ResourceDoc | null;
-  } catch {
-    return { error: "Invalid resource ID" };
-  }
-
-  if (!doc) return { error: "Resource not found" };
-
-  if (!canModify(caller.role, caller.id, docToResource(doc).authorId)) {
-    return { error: "You can only edit your own resources" };
-  }
-
-  if (!data.name.trim()) return { error: "Name is required" };
-
-  await col.updateOne(
-    { _id: new ObjectId(resourceId) },
-    {
-      $set: {
-        name: data.name.trim(),
-        description: data.description.trim(),
-        version: data.version.trim() || "0.1.0",
-        repositoryUrl: data.repositoryUrl.trim(),
-        documentation: data.documentation,
-        status: data.status,
-        featured: data.featured,
-        updatedAt: new Date(),
-      },
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
     }
-  );
 
-  return { success: true };
+    // 2. Authorization
+    if (!hasPermission(caller.role, "resources.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`resource:update:${caller.id}`, "write");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Input validation
+    const validated = updateResourceSchema.safeParse(formData);
+    if (!validated.success) {
+      const fieldErrors: Record<string, string[]> = {};
+      for (const issue of validated.error.issues) {
+        const field = issue.path[0] as string;
+        if (field) {
+          if (!fieldErrors[field]) fieldErrors[field] = [];
+          fieldErrors[field].push(issue.message);
+        }
+      }
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        error: "Please fix the errors below",
+        fieldErrors,
+      };
+    }
+
+    // 5. Ownership check
+    const existing = await resourceService.getRawById(type, resourceId);
+    if (!existing) {
+      return {
+        success: false,
+        code: "NOT_FOUND",
+        error: "Resource not found",
+      };
+    }
+
+    if (!canModify(caller.role, caller.id, existing.authorId)) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "You can only edit your own resources",
+      };
+    }
+
+    // 6. Service call
+    await resourceService.update(type, resourceId, validated.data, caller);
+
+    // 7. Cache revalidation
+    revalidatePath("/dashboard");
+    revalidatePath(`/${type}s`);
+
+    // 8. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "updateResource",
+      userId: caller.id,
+      resourceId,
+      durationMs,
+      message: "Resource updated",
+    });
+    return { success: true, data: { id: resourceId } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "updateResource",
+      durationMs,
+      message: "Failed to update resource",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[updateResource]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to update resource",
+    };
+  }
 }
 
-export async function deleteResource(type: ResourceType, resourceId: string) {
-  const caller = await authenticate();
-  if (!caller) return { error: "Unauthorized" };
-
-  if (ROLE_HIERARCHY[caller.role] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
-  }
-
-  const col = await getCollection(type);
-  let doc: ResourceDoc | null;
+export async function deleteResource(
+  type: ResourceType,
+  resourceId: string
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
   try {
-    doc = await col.findOne({ _id: new ObjectId(resourceId) }) as ResourceDoc | null;
-  } catch {
-    return { error: "Invalid resource ID" };
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
+
+    // 2. Authorization
+    if (!hasPermission(caller.role, "resources.delete")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`resource:delete:${caller.id}`, "write");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Ownership check
+    const existing = await resourceService.getRawById(type, resourceId);
+    if (!existing) {
+      return {
+        success: false,
+        code: "NOT_FOUND",
+        error: "Resource not found",
+      };
+    }
+
+    if (!canModify(caller.role, caller.id, existing.authorId)) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "You can only delete your own resources",
+      };
+    }
+
+    // 5. Service call
+    await resourceService.remove(type, resourceId, caller);
+
+    // 6. Cache revalidation
+    revalidatePath("/dashboard");
+    revalidatePath(`/${type}s`);
+
+    // 7. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "deleteResource",
+      userId: caller.id,
+      resourceId,
+      durationMs,
+      message: "Resource deleted",
+    });
+    return { success: true, data: { id: resourceId } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "deleteResource",
+      durationMs,
+      message: "Failed to delete resource",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[deleteResource]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to delete resource",
+    };
   }
-
-  if (!doc) return { error: "Resource not found" };
-
-  if (!canModify(caller.role, caller.id, docToResource(doc).authorId)) {
-    return { error: "You can only delete your own resources" };
-  }
-
-  await col.deleteOne({ _id: new ObjectId(resourceId) });
-  return { success: true };
 }

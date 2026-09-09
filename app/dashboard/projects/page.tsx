@@ -5,7 +5,8 @@ import ProjectsPageClient from "./projects-page-client";
 
 export default async function ProjectsPage() {
   const { userRole, userId } = await getDashboardSession();
-  const projects = await getProjects();
+  const result = await getProjects();
+  const projects = result.success ? result.data : [];
 
   return (
     <div className="space-y-6">
@@ -26,7 +27,7 @@ export default async function ProjectsPage() {
       </div>
 
       <ProjectsPageClient
-        projects={projects}
+        projects={projects as import("@/types/projects").Project[]}
         callerRole={userRole}
         callerId={userId}
       />

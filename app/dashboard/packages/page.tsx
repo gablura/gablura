@@ -6,7 +6,8 @@ import PackagesPageClient from "./packages-page-client";
 
 export default async function PackagesPage() {
   const { userRole, userId } = await getDashboardSession();
-  const resources = await getResources("package");
+  const result = await getResources("package");
+  const resources = result.success ? result.data : [];
 
   return (
     <div className="space-y-6">
@@ -27,7 +28,7 @@ export default async function PackagesPage() {
       </div>
 
       <PackagesPageClient
-        resources={resources}
+        resources={resources as import("@/types/resources").Resource[]}
         callerRole={userRole}
         callerId={userId}
       />

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-type DeleteAction = (id: string) => Promise<{ error?: string }>;
+type DeleteAction = (id: string) => Promise<{ success: boolean; error?: string }>;
 
 export function useDeleteConfirm(deleteAction: DeleteAction) {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function useDeleteConfirm(deleteAction: DeleteAction) {
     if (!deleteId) return;
     startTransition(async () => {
       const result = await deleteAction(deleteId);
-      if (result.error) {
+      if (!result.success && result.error) {
         alert(result.error);
       }
       setDeleteId(null);

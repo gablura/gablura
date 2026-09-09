@@ -1,95 +1,256 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { getAuthOptions } from "@/lib/auth";
-import { mongoUserStore } from "@/lib/auth";
-import { ROLE_HIERARCHY, ROLES } from "@/types/roles";
-import type { Role } from "@/types/roles";
+import { revalidatePath } from "next/cache";
+import { authenticate } from "@/lib/auth-helpers";
+import { hasPermission } from "@/lib/permissions";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { startTrace, endTrace, structuredLog } from "@/lib/trace";
+import { ROLES } from "@/types/roles";
+import * as userService from "@/features/users/services/user-service";
+import type { ActionResult } from "@/types/action-result";
 
 const VALID_ROLES = Object.values(ROLES) as string[];
 
-export async function changeUserRole(userId: string, newRole: string) {
-  const session = await getServerSession(await getAuthOptions());
-  if (!session?.user) return { error: "Unauthorized" };
+export async function changeUserRole(
+  userId: string,
+  newRole: string
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
+  try {
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
 
-  const callerRole = (session.user.role ?? "user") as Role;
-  if (ROLE_HIERARCHY[callerRole] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
+    // 2. Authorization
+    if (!hasPermission(caller.role, "users.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`role-change:${caller.id}`, "write-heavy");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Input validation
+    if (!VALID_ROLES.includes(newRole)) {
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        error: "Invalid role",
+      };
+    }
+
+    // 5. Service call
+    const result = await userService.changeRole(caller.id, caller.role, userId, newRole);
+    if (!result.success) {
+      return {
+        success: false,
+        code: result.error === "User not found" ? "NOT_FOUND" : "FORBIDDEN",
+        error: result.error!,
+      };
+    }
+
+    // 6. Cache revalidation
+    revalidatePath("/dashboard/users");
+
+    // 7. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "changeUserRole",
+      userId: caller.id,
+      resourceId: userId,
+      durationMs,
+      message: "User role changed",
+    });
+    return { success: true, data: { id: userId } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "changeUserRole",
+      durationMs,
+      message: "Failed to change user role",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[changeUserRole]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to change user role",
+    };
   }
-
-  if (!VALID_ROLES.includes(newRole)) {
-    return { error: "Invalid role" };
-  }
-
-  const target = await mongoUserStore.findById(userId);
-  if (!target) return { error: "User not found" };
-
-  if (target.id === session.user.id) {
-    return { error: "Cannot change your own role" };
-  }
-
-  if (
-    target.role === ROLES.OWNER &&
-    callerRole !== ROLES.OWNER
-  ) {
-    return { error: "Only the owner can change the owner role" };
-  }
-
-  if (
-    ROLE_HIERARCHY[newRole as Role] >= ROLE_HIERARCHY[callerRole] &&
-    callerRole !== ROLES.OWNER
-  ) {
-    return { error: "Cannot assign a role equal to or higher than your own" };
-  }
-
-  await mongoUserStore.update(userId, { role: newRole });
-  return { success: true };
 }
 
-export async function toggleUserBan(userId: string) {
-  const session = await getServerSession(await getAuthOptions());
-  if (!session?.user) return { error: "Unauthorized" };
+export async function toggleUserBan(
+  userId: string
+): Promise<ActionResult<{ id: string; banned: boolean }>> {
+  const trace = startTrace();
+  try {
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
 
-  const callerRole = (session.user.role ?? "user") as Role;
-  if (ROLE_HIERARCHY[callerRole] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
+    // 2. Authorization
+    if (!hasPermission(caller.role, "users.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`ban-toggle:${caller.id}`, "write-heavy");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Service call
+    const result = await userService.toggleBan(caller.id, caller.role, userId);
+    if (!result.success) {
+      return {
+        success: false,
+        code: result.error === "User not found" ? "NOT_FOUND" : "FORBIDDEN",
+        error: result.error!,
+      };
+    }
+
+    // 5. Cache revalidation
+    revalidatePath("/dashboard/users");
+
+    // 6. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "toggleUserBan",
+      userId: caller.id,
+      resourceId: userId,
+      durationMs,
+      message: "User ban toggled",
+    });
+    return { success: true, data: { id: userId, banned: result.banned! } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "toggleUserBan",
+      durationMs,
+      message: "Failed to toggle user ban",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[toggleUserBan]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to toggle user ban",
+    };
   }
-
-  const target = await mongoUserStore.findById(userId);
-  if (!target) return { error: "User not found" };
-
-  if (target.id === session.user.id) {
-    return { error: "Cannot ban yourself" };
-  }
-
-  if (
-    target.role === ROLES.OWNER &&
-    callerRole !== ROLES.OWNER
-  ) {
-    return { error: "Only the owner can ban the owner" };
-  }
-
-  const bannedAt = target.bannedAt ? null : new Date();
-  await mongoUserStore.update(userId, { bannedAt });
-  return { success: true };
 }
 
-export async function banUser(userId: string) {
-  const session = await getServerSession(await getAuthOptions());
-  if (!session?.user) return { error: "Unauthorized" };
+export async function banUser(
+  userId: string
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
+  try {
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
 
-  const callerRole = (session.user.role ?? "user") as Role;
-  if (callerRole !== ROLES.OWNER) {
-    return { error: "Only the owner can delete users" };
+    // 2. Authorization (owner only)
+    if (caller.role !== ROLES.OWNER) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Only the owner can delete users",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`ban-user:${caller.id}`, "write-heavy");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Service call
+    const result = await userService.ban(caller.id, caller.role, userId);
+    if (!result.success) {
+      return {
+        success: false,
+        code: result.error === "User not found" ? "NOT_FOUND" : "FORBIDDEN",
+        error: result.error!,
+      };
+    }
+
+    // 5. Cache revalidation
+    revalidatePath("/dashboard/users");
+
+    // 6. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "banUser",
+      userId: caller.id,
+      resourceId: userId,
+      durationMs,
+      message: "User banned",
+    });
+    return { success: true, data: { id: userId } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "banUser",
+      durationMs,
+      message: "Failed to ban user",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[banUser]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to ban user",
+    };
   }
-
-  const target = await mongoUserStore.findById(userId);
-  if (!target) return { error: "User not found" };
-
-  if (target.id === session.user.id) {
-    return { error: "Cannot delete yourself" };
-  }
-
-  await mongoUserStore.update(userId, { bannedAt: new Date() });
-  return { success: true };
 }

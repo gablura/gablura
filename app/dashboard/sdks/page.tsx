@@ -6,7 +6,8 @@ import SdksPageClient from "./sdks-page-client";
 
 export default async function SdksPage() {
   const { userRole, userId } = await getDashboardSession();
-  const resources = await getResources("sdk");
+  const result = await getResources("sdk");
+  const resources = result.success ? result.data : [];
 
   return (
     <div className="space-y-6">
@@ -27,7 +28,7 @@ export default async function SdksPage() {
       </div>
 
       <SdksPageClient
-        resources={resources}
+        resources={resources as import("@/types/resources").Resource[]}
         callerRole={userRole}
         callerId={userId}
       />

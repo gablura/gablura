@@ -51,8 +51,8 @@ export function docToResource(doc: ResourceDoc): Resource {
     authorName: doc.authorName,
     status: doc.status as "draft" | "published",
     featured: doc.featured,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
+    createdAt: doc.createdAt ?? new Date(),
+    updatedAt: doc.updatedAt ?? new Date(),
   };
 }
 
@@ -72,8 +72,8 @@ export function docToProject(doc: ProjectDoc): Project {
     status: doc.status as ProjectStatus,
     authorId: doc.authorId,
     authorName: doc.authorName,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
+    createdAt: doc.createdAt ?? new Date(),
+    updatedAt: doc.updatedAt ?? new Date(),
   };
 }
 

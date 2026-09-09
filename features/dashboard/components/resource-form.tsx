@@ -14,6 +14,10 @@ import type {
 import FormModal from "./form-modal";
 import BasicInfoFields from "./basic-info-fields";
 import DocFields from "./doc-fields";
+import {
+  FormSubmitButton,
+  FormCancelButton,
+} from "./form-submit-button";
 
 interface ResourceFormProps {
   type: ResourceType;
@@ -103,7 +107,7 @@ export default function ResourceForm({
         ? await updateResource(type, resource!.id, data)
         : await createResource(type, data);
 
-      if (result.error) {
+      if (!result.success) {
         setError(result.error);
         return;
       }
@@ -121,47 +125,13 @@ export default function ResourceForm({
       formKey={formKey}
       footer={
         <>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isPending}
-            className="rounded-lg border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-surface-elevated hover:text-foreground disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="resource-form"
-            disabled={isPending || !form.name.trim()}
-            className={cn(
-              "inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border px-4 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
-              "border-primary/20 bg-primary text-primary-foreground shadow-[0_1px_0_0_rgba(0,0,0,0.2),inset_0_1px_0_0_rgba(255,255,255,0.08)] hover:bg-primary/85"
-            )}
-          >
-            {isPending && (
-              <svg
-                className="size-4 animate-spin"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-            )}
-            {isEdit ? "Save changes" : `Create ${type}`}
-          </button>
+          <FormCancelButton onClick={onClose} disabled={isPending} />
+          <FormSubmitButton
+            formId="resource-form"
+            isPending={isPending}
+            disabled={!form.name.trim()}
+            label={isEdit ? "Save changes" : `Create ${type}`}
+          />
         </>
       }
     >

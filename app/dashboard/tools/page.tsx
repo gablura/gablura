@@ -6,7 +6,8 @@ import ToolsPageClient from "./tools-page-client";
 
 export default async function ToolsPage() {
   const { userRole, userId } = await getDashboardSession();
-  const resources = await getResources("tool");
+  const result = await getResources("tool");
+  const resources = result.success ? result.data : [];
 
   return (
     <div className="space-y-6">
@@ -27,7 +28,7 @@ export default async function ToolsPage() {
       </div>
 
       <ToolsPageClient
-        resources={resources}
+        resources={resources as import("@/types/resources").Resource[]}
         callerRole={userRole}
         callerId={userId}
       />

@@ -1,4 +1,4 @@
-import { MongoClient, type Db } from "mongodb";
+import { MongoClient, type Db, type ClientSession } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
 
@@ -27,9 +27,29 @@ if (process.env.NODE_ENV === "production") {
   clientPromise = global._mongoClient.connect();
 }
 
+async function getClient(): Promise<MongoClient> {
+  return clientPromise;
+}
+
 async function getDb(): Promise<Db> {
   const client = await clientPromise;
   return client.db();
 }
 
-export { getDb, clientPromise };
+async function withTransaction<T>(
+  fn: (session: ClientSession) => Promise<T>
+): Promise<T> {
+  const client = await getClient();
+  const session = client.startSession();
+  try {
+    let result!: T;
+    await session.withTransaction(async () => {
+      result = await fn(session);
+    });
+    return result;
+  } finally {
+    await session.endSession();
+  }
+}
+
+export { getDb, getClient, clientPromise, withTransaction };

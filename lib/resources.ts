@@ -48,7 +48,7 @@ export async function getLatestResources(
   const all = results.flat();
   all.sort((a, b) => {
     if (a.featured !== b.featured) return a.featured ? -1 : 1;
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    return (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0);
   });
   return all.slice(0, limit);
 }
@@ -131,7 +131,7 @@ async function getFeaturedResources(
   const all = results.flat();
   all.sort((a, b) => {
     if (a.featured !== b.featured) return a.featured ? -1 : 1;
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    return (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0);
   });
   return all.slice(0, limit);
 }

@@ -1,134 +1,364 @@
 "use server";
 
-import { ROLE_HIERARCHY } from "@/types/roles";
+import { revalidatePath } from "next/cache";
+import { authenticate, canModify } from "@/lib/auth-helpers";
+import { hasPermission } from "@/lib/permissions";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { checkIdempotency, recordIdempotency } from "@/lib/idempotency";
+import { startTrace, endTrace, structuredLog } from "@/lib/trace";
+import { createProjectSchema, updateProjectSchema } from "@/features/projects/schemas/project-schema";
+import * as projectService from "@/features/projects/services/project-service";
 import type { ProjectFormData } from "@/types/projects";
-import { authenticate, canModify, buildRoleQuery } from "@/lib/auth-helpers";
-import { docToProject, getProjectsCollection, type ProjectDoc } from "@/lib/resource-helpers";
-import { generateSlug } from "@/lib/slug";
-import { ObjectId } from "mongodb";
+import type { ProjectListItem } from "@/features/projects/dtos/project-dto";
+import type { ActionResult } from "@/types/action-result";
 
-export async function getProjects() {
-  const caller = await authenticate();
-  if (!caller) return [];
-
-  const col = await getProjectsCollection();
-  const query = buildRoleQuery(caller.role, caller.id);
-  const docs = await col.find(query).sort({ createdAt: -1 }).toArray();
-  return docs.map(docToProject);
-}
-
-export async function createProject(data: ProjectFormData) {
-  const caller = await authenticate();
-  if (!caller) return { error: "Unauthorized" };
-
-  if (ROLE_HIERARCHY[caller.role] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
-  }
-
-  if (!data.name.trim()) return { error: "Name is required" };
-
-  const slug = data.slug.trim() || generateSlug(data.name);
-  const techStack = data.techStack
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const now = new Date();
-
-  const col = await getProjectsCollection();
-  await col.insertOne({
-    name: data.name.trim(),
-    slug,
-    tagline: data.tagline.trim(),
-    description: data.description.trim(),
-    techStack,
-    frontendUrl: data.frontendUrl.trim(),
-    backendUrl: data.backendUrl.trim(),
-    repositoryUrl: data.repositoryUrl.trim(),
-    imageUrl: data.imageUrl.trim(),
-    featured: data.featured,
-    status: data.status,
-    authorId: caller.id,
-    authorName: caller.name,
-    createdAt: now,
-    updatedAt: now,
-  });
-
-  return { success: true };
-}
-
-export async function updateProject(projectId: string, data: ProjectFormData) {
-  const caller = await authenticate();
-  if (!caller) return { error: "Unauthorized" };
-
-  if (ROLE_HIERARCHY[caller.role] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
-  }
-
-  const col = await getProjectsCollection();
-  let doc: ProjectDoc | null;
+export async function getProjects(): Promise<ActionResult<ProjectListItem[]>> {
+  const trace = startTrace();
   try {
-    doc = await col.findOne({ _id: new ObjectId(projectId) }) as ProjectDoc | null;
-  } catch {
-    return { error: "Invalid project ID" };
-  }
-
-  if (!doc) return { error: "Project not found" };
-
-  if (!canModify(caller.role, caller.id, docToProject(doc).authorId)) {
-    return { error: "You can only edit your own projects" };
-  }
-
-  if (!data.name.trim()) return { error: "Name is required" };
-
-  const techStack = data.techStack
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  await col.updateOne(
-    { _id: new ObjectId(projectId) },
-    {
-      $set: {
-        name: data.name.trim(),
-        tagline: data.tagline.trim(),
-        description: data.description.trim(),
-        techStack,
-        frontendUrl: data.frontendUrl.trim(),
-        backendUrl: data.backendUrl.trim(),
-        repositoryUrl: data.repositoryUrl.trim(),
-        imageUrl: data.imageUrl.trim(),
-        featured: data.featured,
-        status: data.status,
-        updatedAt: new Date(),
-      },
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
     }
-  );
 
-  return { success: true };
+    const projects = await projectService.listByRole(caller);
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "getProjects",
+      userId: caller.id,
+      durationMs,
+      message: "Projects fetched",
+    });
+    return { success: true, data: projects };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "getProjects",
+      durationMs,
+      message: "Failed to fetch projects",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[getProjects]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to fetch projects",
+    };
+  }
 }
 
-export async function deleteProject(projectId: string) {
-  const caller = await authenticate();
-  if (!caller) return { error: "Unauthorized" };
-
-  if (ROLE_HIERARCHY[caller.role] < ROLE_HIERARCHY.admin) {
-    return { error: "Insufficient permissions" };
-  }
-
-  const col = await getProjectsCollection();
-  let doc: ProjectDoc | null;
+export async function createProject(
+  formData: ProjectFormData
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
   try {
-    doc = await col.findOne({ _id: new ObjectId(projectId) }) as ProjectDoc | null;
-  } catch {
-    return { error: "Invalid project ID" };
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
+
+    // 2. Authorization
+    if (!hasPermission(caller.role, "projects.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`project:create:${caller.id}`, "write");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Input validation
+    const validated = createProjectSchema.safeParse(formData);
+    if (!validated.success) {
+      const fieldErrors: Record<string, string[]> = {};
+      for (const issue of validated.error.issues) {
+        const field = issue.path[0] as string;
+        if (field) {
+          if (!fieldErrors[field]) fieldErrors[field] = [];
+          fieldErrors[field].push(issue.message);
+        }
+      }
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        error: "Please fix the errors below",
+        fieldErrors,
+      };
+    }
+
+    // 5. Idempotency check
+    const { isDuplicate, existingResourceId } = await checkIdempotency(
+      caller.id,
+      "create:project",
+      validated.data as unknown as Record<string, unknown>
+    );
+    if (isDuplicate && existingResourceId) {
+      return { success: true, data: { id: existingResourceId } };
+    }
+
+    // 6. Service call
+    const id = await projectService.create(validated.data, caller);
+
+    // 7. Record idempotency
+    await recordIdempotency(
+      caller.id,
+      "create:project",
+      validated.data as unknown as Record<string, unknown>,
+      id
+    );
+
+    // 8. Cache revalidation
+    revalidatePath("/dashboard");
+    revalidatePath("/projects");
+
+    // 9. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "createProject",
+      userId: caller.id,
+      resourceId: id,
+      durationMs,
+      message: "Project created",
+    });
+    return { success: true, data: { id } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "createProject",
+      durationMs,
+      message: "Failed to create project",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[createProject]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to create project",
+    };
   }
+}
 
-  if (!doc) return { error: "Project not found" };
+export async function updateProject(
+  projectId: string,
+  formData: ProjectFormData
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
+  try {
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
 
-  if (!canModify(caller.role, caller.id, docToProject(doc).authorId)) {
-    return { error: "You can only delete your own projects" };
+    // 2. Authorization
+    if (!hasPermission(caller.role, "projects.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`project:update:${caller.id}`, "write");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Input validation
+    const validated = updateProjectSchema.safeParse(formData);
+    if (!validated.success) {
+      const fieldErrors: Record<string, string[]> = {};
+      for (const issue of validated.error.issues) {
+        const field = issue.path[0] as string;
+        if (field) {
+          if (!fieldErrors[field]) fieldErrors[field] = [];
+          fieldErrors[field].push(issue.message);
+        }
+      }
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        error: "Please fix the errors below",
+        fieldErrors,
+      };
+    }
+
+    // 5. Ownership check
+    const existing = await projectService.getRawById(projectId);
+    if (!existing) {
+      return {
+        success: false,
+        code: "NOT_FOUND",
+        error: "Project not found",
+      };
+    }
+
+    if (!canModify(caller.role, caller.id, existing.authorId)) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "You can only edit your own projects",
+      };
+    }
+
+    // 6. Service call
+    await projectService.update(projectId, validated.data, caller);
+
+    // 7. Cache revalidation
+    revalidatePath("/dashboard");
+    revalidatePath("/projects");
+
+    // 8. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "updateProject",
+      userId: caller.id,
+      resourceId: projectId,
+      durationMs,
+      message: "Project updated",
+    });
+    return { success: true, data: { id: projectId } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "updateProject",
+      durationMs,
+      message: "Failed to update project",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[updateProject]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to update project",
+    };
   }
+}
 
-  await col.deleteOne({ _id: new ObjectId(projectId) });
-  return { success: true };
+export async function deleteProject(
+  projectId: string
+): Promise<ActionResult<{ id: string }>> {
+  const trace = startTrace();
+  try {
+    // 1. Authentication
+    const caller = await authenticate();
+    if (!caller) {
+      return {
+        success: false,
+        code: "UNAUTHORIZED",
+        error: "You must be signed in",
+      };
+    }
+
+    // 2. Authorization
+    if (!hasPermission(caller.role, "projects.write")) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "Insufficient permissions",
+      };
+    }
+
+    // 3. Rate limiting
+    const { allowed } = checkRateLimit(`project:delete:${caller.id}`, "write");
+    if (!allowed) {
+      return {
+        success: false,
+        code: "RATE_LIMITED",
+        error: "Too many requests. Please try again later.",
+      };
+    }
+
+    // 4. Ownership check
+    const existing = await projectService.getRawById(projectId);
+    if (!existing) {
+      return {
+        success: false,
+        code: "NOT_FOUND",
+        error: "Project not found",
+      };
+    }
+
+    if (!canModify(caller.role, caller.id, existing.authorId)) {
+      return {
+        success: false,
+        code: "FORBIDDEN",
+        error: "You can only delete your own projects",
+      };
+    }
+
+    // 5. Service call
+    await projectService.remove(projectId, caller);
+
+    // 6. Cache revalidation
+    revalidatePath("/dashboard");
+    revalidatePath("/projects");
+
+    // 7. Return result
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "info",
+      requestId: trace.requestId,
+      action: "deleteProject",
+      userId: caller.id,
+      resourceId: projectId,
+      durationMs,
+      message: "Project deleted",
+    });
+    return { success: true, data: { id: projectId } };
+  } catch (error) {
+    const { durationMs } = endTrace(trace);
+    structuredLog({
+      level: "error",
+      requestId: trace.requestId,
+      action: "deleteProject",
+      durationMs,
+      message: "Failed to delete project",
+      metadata: { error: error instanceof Error ? error.message : "Unknown" },
+    });
+    console.error("[deleteProject]", error);
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      error: "Failed to delete project",
+    };
+  }
 }
