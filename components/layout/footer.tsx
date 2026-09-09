@@ -53,7 +53,7 @@ export default function Footer({ counts }: FooterProps) {
                 </defs>
                 <path d="M20 4C11.163 4 4 11.163 4 20s7.163 16 16 16c5.08 0 9.553-2.37 12.5-6.07V22h-6.5v3.5c-2.16 1.63-4.87 2.5-7.5 2.5-5.79 0-10.5-4.71-10.5-10.5S14.21 7 20 7c3.08 0 5.87 1.33 7.81 3.44L33.12 8.2C30.08 5.26 25.32 3.5 20 3.5V4Z" fill="url(#footer-gGrad)"/>
                 <path d="M32 16v4h-6v-4h6Z" fill="#818cf8"/>
-                <text x="40" y="27" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="600" fill="#e4e4e7" letterSpacing="-0.02em">ablura</text>
+                <text x="40" y="27" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="600" fill="var(--foreground)" letterSpacing="-0.02em">ablura</text>
               </svg>
             </Link>
             <p className="mt-3 max-w-[260px] text-sm leading-relaxed text-muted-foreground">

@@ -22,47 +22,49 @@ export default async function OGImage() {
           fontFamily: "sans-serif",
         }}
       >
-        {/* Brand */}
+        {/* Brand — matches navbar SVG logo exactly */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "12px",
+            gap: "0px",
             marginBottom: "36px",
           }}
         >
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #818cf8, #6366f1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+          <svg
+            viewBox="0 0 40 40"
+            fill="none"
+            style={{ width: "52px", height: "52px", flexShrink: 0 }}
           >
-            <div
-              style={{
-                fontSize: "28px",
-                fontWeight: 700,
-                color: "#ffffff",
-                display: "flex",
-              }}
-            >
-              G
-            </div>
-          </div>
+            <defs>
+              <linearGradient
+                id="og-gGrad"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor="#818cf8" />
+                <stop offset="100%" stopColor="#6366f1" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M20 4C11.163 4 4 11.163 4 20s7.163 16 16 16c5.08 0 9.553-2.37 12.5-6.07V22h-6.5v3.5c-2.16 1.63-4.87 2.5-7.5 2.5-5.79 0-10.5-4.71-10.5-10.5S14.21 7 20 7c3.08 0 5.87 1.33 7.81 3.44L33.12 8.2C30.08 5.26 25.32 3.5 20 3.5V4Z"
+              fill="url(#og-gGrad)"
+            />
+            <path d="M32 16v4h-6v-4h6Z" fill="#818cf8" />
+          </svg>
           <div
             style={{
-              fontSize: "48px",
+              fontSize: "52px",
               fontWeight: 600,
               color: "#e4e4e7",
               letterSpacing: "-0.02em",
               display: "flex",
+              marginLeft: "4px",
             }}
           >
-            Gablura
+            ablura
           </div>
         </div>
 
