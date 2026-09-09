@@ -43,11 +43,18 @@ export default function Footer({ counts }: FooterProps) {
         <div className="grid grid-cols-2 gap-10 py-16 sm:grid-cols-4 lg:grid-cols-5">
           {/* Brand */}
           <div className="col-span-2 sm:col-span-4 lg:col-span-1">
-            <Link href="/" className="group inline-flex items-center gap-1.5">
-              <span className="text-foreground font-semibold tracking-tight text-lg">
-                Gablura
-              </span>
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent transition-transform duration-200 group-hover:scale-125" />
+            <Link href="/" className="group inline-flex items-center">
+              <svg viewBox="0 0 160 40" fill="none" className="h-7 w-auto" aria-label="Gablura">
+                <defs>
+                  <linearGradient id="footer-gGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#818cf8"/>
+                    <stop offset="100%" stopColor="#6366f1"/>
+                  </linearGradient>
+                </defs>
+                <path d="M20 4C11.163 4 4 11.163 4 20s7.163 16 16 16c5.08 0 9.553-2.37 12.5-6.07V22h-6.5v3.5c-2.16 1.63-4.87 2.5-7.5 2.5-5.79 0-10.5-4.71-10.5-10.5S14.21 7 20 7c3.08 0 5.87 1.33 7.81 3.44L33.12 8.2C30.08 5.26 25.32 3.5 20 3.5V4Z" fill="url(#footer-gGrad)"/>
+                <path d="M32 16v4h-6v-4h6Z" fill="#818cf8"/>
+                <text x="40" y="27" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="600" fill="#e4e4e7" letterSpacing="-0.02em">ablura</text>
+              </svg>
             </Link>
             <p className="mt-3 max-w-[260px] text-sm leading-relaxed text-muted-foreground">
               Developer infrastructure for modern builders. Packages, SDKs,

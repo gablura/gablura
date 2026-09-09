@@ -16,12 +16,23 @@ export async function generateMetadata({
   const sdk = await getCachedResourceBySlug("sdk", slug);
 
   if (!sdk) {
-    return { title: "SDK Not Found — Gablura" };
+    return { title: "SDK Not Found" };
   }
 
+  const title = sdk.name;
+  const description = sdk.description || `Documentation for ${sdk.name}`;
+
   return {
-    title: `${sdk.name} — Gablura`,
-    description: sdk.description || `Documentation for ${sdk.name}`,
+    title,
+    description,
+    openGraph: {
+      title: `${title} — Gablura`,
+      description,
+    },
+    twitter: {
+      title: `${title} — Gablura`,
+      description,
+    },
   };
 }
 

@@ -4,9 +4,19 @@ import PackagesHero from "@/features/packages/sections/packages-hero";
 import PackagesGrid from "@/features/packages/sections/packages-grid";
 
 export const metadata: Metadata = {
-  title: "Packages — Gablura",
+  title: "Packages",
   description:
     "Reusable building blocks for full-stack applications. Authentication, authorization, and composable primitives published to npm.",
+  openGraph: {
+    title: "Packages — Gablura",
+    description:
+      "Reusable building blocks for full-stack applications. Authentication, authorization, and composable primitives published to npm.",
+  },
+  twitter: {
+    title: "Packages — Gablura",
+    description:
+      "Reusable building blocks for full-stack applications. Authentication, authorization, and composable primitives published to npm.",
+  },
 };
 
 export const revalidate = 60;

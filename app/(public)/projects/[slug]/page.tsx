@@ -15,9 +15,20 @@ export async function generateMetadata({
   const project = await getCachedProjectBySlug(slug);
   if (!project) return { title: "Project Not Found" };
 
+  const title = project.name;
+  const description = project.tagline;
+
   return {
-    title: `${project.name} — Gablura`,
-    description: project.tagline,
+    title,
+    description,
+    openGraph: {
+      title: `${title} — Gablura`,
+      description,
+    },
+    twitter: {
+      title: `${title} — Gablura`,
+      description,
+    },
   };
 }
 

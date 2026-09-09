@@ -14,9 +14,19 @@ import EcosystemValues from "@/features/ecosystem/sections/ecosystem-values";
 import EcosystemCta from "@/features/ecosystem/sections/ecosystem-cta";
 
 export const metadata: Metadata = {
-  title: "Ecosystem — Gablura",
+  title: "Ecosystem",
   description:
     "Explore the Gablura ecosystem. Packages, SDKs, tools, and projects built for modern web development.",
+  openGraph: {
+    title: "Ecosystem — Gablura",
+    description:
+      "Explore the Gablura ecosystem. Packages, SDKs, tools, and projects built for modern web development.",
+  },
+  twitter: {
+    title: "Ecosystem — Gablura",
+    description:
+      "Explore the Gablura ecosystem. Packages, SDKs, tools, and projects built for modern web development.",
+  },
 };
 
 export const revalidate = 60;

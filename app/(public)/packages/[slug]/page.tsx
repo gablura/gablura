@@ -16,12 +16,23 @@ export async function generateMetadata({
   const pkg = await getCachedResourceBySlug("package", slug);
 
   if (!pkg) {
-    return { title: "Package Not Found — Gablura" };
+    return { title: "Package Not Found" };
   }
 
+  const title = pkg.name;
+  const description = pkg.description || `Documentation for ${pkg.name}`;
+
   return {
-    title: `${pkg.name} — Gablura`,
-    description: pkg.description || `Documentation for ${pkg.name}`,
+    title,
+    description,
+    openGraph: {
+      title: `${title} — Gablura`,
+      description,
+    },
+    twitter: {
+      title: `${title} — Gablura`,
+      description,
+    },
   };
 }
 

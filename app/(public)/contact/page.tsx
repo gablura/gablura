@@ -7,9 +7,19 @@ import { ContactInfo } from "@/features/contact/components/contact-info";
 import { ContactFaq } from "@/features/contact/components/contact-faq";
 
 export const metadata: Metadata = {
-  title: "Contact — Gablura",
+  title: "Contact",
   description:
     "Get in touch with the Gablura team. Send us a message about packages, SDKs, tools, or collaboration.",
+  openGraph: {
+    title: "Contact — Gablura",
+    description:
+      "Get in touch with the Gablura team. Send us a message about packages, SDKs, tools, or collaboration.",
+  },
+  twitter: {
+    title: "Contact — Gablura",
+    description:
+      "Get in touch with the Gablura team. Send us a message about packages, SDKs, tools, or collaboration.",
+  },
 };
 
 export default function ContactPage() {

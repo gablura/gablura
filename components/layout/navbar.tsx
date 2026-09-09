@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SiGithub } from "react-icons/si";
 
 const NAV_LINKS = [
@@ -14,6 +15,7 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -53,11 +55,18 @@ export default function Navbar() {
           aria-label="Primary"
         >
           {/* Logo */}
-          <Link href="/" className="group relative flex items-center gap-1.5">
-            <span className="text-foreground font-semibold tracking-tight text-lg">
-              Gablura
-            </span>
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent transition-transform duration-200 group-hover:scale-125" />
+          <Link href="/" className="group relative flex items-center">
+            <svg viewBox="0 0 160 40" fill="none" className="h-7 w-auto sm:h-8" aria-label="Gablura">
+              <defs>
+                <linearGradient id="nav-gGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#818cf8"/>
+                  <stop offset="100%" stopColor="#6366f1"/>
+                </linearGradient>
+              </defs>
+              <path d="M20 4C11.163 4 4 11.163 4 20s7.163 16 16 16c5.08 0 9.553-2.37 12.5-6.07V22h-6.5v3.5c-2.16 1.63-4.87 2.5-7.5 2.5-5.79 0-10.5-4.71-10.5-10.5S14.21 7 20 7c3.08 0 5.87 1.33 7.81 3.44L33.12 8.2C30.08 5.26 25.32 3.5 20 3.5V4Z" fill="url(#nav-gGrad)"/>
+              <path d="M32 16v4h-6v-4h6Z" fill="#818cf8"/>
+              <text x="40" y="27" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="600" fill="#e4e4e7" letterSpacing="-0.02em">ablura</text>
+            </svg>
           </Link>
 
           {/* Desktop nav — pill style */}
@@ -65,15 +74,25 @@ export default function Navbar() {
             className="hidden items-center gap-0.5 rounded-full border border-border-subtle bg-surface/50 px-1 py-1 sm:flex"
             aria-label="Main"
           >
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="relative rounded-full px-3.5 py-1.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-surface-elevated"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname === link.href || pathname.startsWith(link.href + "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? "bg-accent-muted text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Right side */}
@@ -150,21 +169,31 @@ export default function Navbar() {
           aria-label="Mobile"
         >
           <div className="flex flex-col gap-1 pt-6 pb-4">
-            {NAV_LINKS.map((link, i) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-3.5 text-2xl font-semibold tracking-tight text-foreground transition-all duration-200 hover:bg-surface active:scale-[0.98]"
-                style={{
-                  transitionDelay: mobileOpen ? `${i * 50}ms` : "0ms",
-                  opacity: mobileOpen ? 1 : 0,
-                  transform: mobileOpen ? "translateY(0)" : "translateY(12px)",
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map((link, i) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname === link.href || pathname.startsWith(link.href + "/");
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`rounded-lg px-3 py-3.5 text-2xl font-semibold tracking-tight transition-all duration-200 active:scale-[0.98] ${
+                    isActive
+                      ? "bg-accent-muted text-foreground"
+                      : "text-foreground hover:bg-surface"
+                  }`}
+                  style={{
+                    transitionDelay: mobileOpen ? `${i * 50}ms` : "0ms",
+                    opacity: mobileOpen ? 1 : 0,
+                    transform: mobileOpen ? "translateY(0)" : "translateY(12px)",
+                  }}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
 
           <div className="border-t border-border-subtle pt-4 pb-6">

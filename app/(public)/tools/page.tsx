@@ -4,9 +4,19 @@ import ToolsHero from "@/features/tools/sections/tools-hero";
 import ToolsGrid from "@/features/tools/sections/tools-grid";
 
 export const metadata: Metadata = {
-  title: "Tools — Gablura",
+  title: "Tools",
   description:
     "Utilities that remove repetitive work. CLI helpers, generators, and developer experience enhancements built for real workflows.",
+  openGraph: {
+    title: "Tools — Gablura",
+    description:
+      "Utilities that remove repetitive work. CLI helpers, generators, and developer experience enhancements built for real workflows.",
+  },
+  twitter: {
+    title: "Tools — Gablura",
+    description:
+      "Utilities that remove repetitive work. CLI helpers, generators, and developer experience enhancements built for real workflows.",
+  },
 };
 
 export const revalidate = 60;

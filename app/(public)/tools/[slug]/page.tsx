@@ -16,12 +16,23 @@ export async function generateMetadata({
   const tool = await getCachedResourceBySlug("tool", slug);
 
   if (!tool) {
-    return { title: "Tool Not Found — Gablura" };
+    return { title: "Tool Not Found" };
   }
 
+  const title = tool.name;
+  const description = tool.description || `Documentation for ${tool.name}`;
+
   return {
-    title: `${tool.name} — Gablura`,
-    description: tool.description || `Documentation for ${tool.name}`,
+    title,
+    description,
+    openGraph: {
+      title: `${title} — Gablura`,
+      description,
+    },
+    twitter: {
+      title: `${title} — Gablura`,
+      description,
+    },
   };
 }
 
