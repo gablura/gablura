@@ -1,29 +1,14 @@
-import { getServerSession } from "next-auth";
-import { getAuthOptions } from "@/lib/auth";
+import { getDashboardSession } from "@/lib/auth-helpers";
 import { mongoUserStore } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { HiOutlineShieldCheck } from "react-icons/hi2";
-import type { Role } from "@/types/roles";
 import UsersPageClient from "./users-page-client";
 
 export default async function UsersPage() {
-  const session = await getServerSession(await getAuthOptions());
-
-  if (!session) {
-    redirect("/login");
-  }
-
-  const userRole = (session.user?.role ?? "user") as Role;
-
-  if (userRole !== "owner") {
-    redirect("/dashboard");
-  }
-
+  const { userRole } = await getDashboardSession("owner");
   const users = await mongoUserStore.findAll();
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-accent/10">
@@ -40,11 +25,7 @@ export default async function UsersPage() {
         </div>
       </div>
 
-      {/* Client wrapper handles stats, table, and actions */}
-      <UsersPageClient
-        users={users}
-        callerRole={userRole}
-      />
+      <UsersPageClient users={users} callerRole={userRole} />
     </div>
   );
 }

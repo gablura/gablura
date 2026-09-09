@@ -1,20 +1,11 @@
-import { getServerSession } from "next-auth";
-import { getAuthOptions } from "@/lib/auth";
+import { getDashboardSession } from "@/lib/auth-helpers";
 import { getResources } from "@/actions/resources";
-import { redirect } from "next/navigation";
 import { HiOutlineCube } from "react-icons/hi2";
-import type { Role } from "@/types/roles";
 import { RESOURCE_TYPE_SINGULAR } from "@/types/resources";
 import PackagesPageClient from "./packages-page-client";
 
 export default async function PackagesPage() {
-  const session = await getServerSession(await getAuthOptions());
-  if (!session) redirect("/login");
-
-  const userRole = (session.user?.role ?? "user") as Role;
-  const userId = session.user?.id as string;
-  if (userRole !== "owner" && userRole !== "admin") redirect("/dashboard");
-
+  const { userRole, userId } = await getDashboardSession();
   const resources = await getResources("package");
 
   return (

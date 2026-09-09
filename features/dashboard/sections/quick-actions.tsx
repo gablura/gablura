@@ -5,6 +5,7 @@ import {
   HiOutlineCube,
   HiOutlineWrenchScrewdriver,
   HiOutlineCommandLine,
+  HiOutlineBuildingLibrary,
 } from "react-icons/hi2";
 import { canManageResources } from "@/types/roles";
 import type { Role } from "@/types/roles";
@@ -22,6 +23,26 @@ export default function QuickActions({ userRole }: QuickActionsProps) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {canManageResources(userRole) && (
           <>
+            <Link
+              href="/dashboard/projects"
+              className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex size-9 items-center justify-center rounded-lg bg-accent/10">
+                  <HiOutlineBuildingLibrary className="size-[18px] text-accent" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Projects
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    Manage projects
+                  </p>
+                </div>
+              </div>
+              <HiOutlineArrowRight className="size-4 text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent" />
+            </Link>
+
             <Link
               href="/dashboard/packages"
               className="group flex items-center justify-between rounded-xl border border-border-subtle bg-surface p-4 transition-all duration-150 hover:border-accent/25 hover:bg-surface-elevated"

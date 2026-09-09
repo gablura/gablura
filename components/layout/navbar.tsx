@@ -6,6 +6,7 @@ import { SiGithub } from "react-icons/si";
 
 const NAV_LINKS = [
   { href: "/ecosystem", label: "Ecosystem" },
+  { href: "/projects", label: "Projects" },
   { href: "/packages", label: "Packages" },
   { href: "/sdks", label: "SDKs" },
   { href: "/tools", label: "Tools" },

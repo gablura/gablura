@@ -10,6 +10,7 @@ import {
   HiOutlineCube,
   HiOutlineWrenchScrewdriver,
   HiOutlineCommandLine,
+  HiOutlineBuildingLibrary,
 } from "react-icons/hi2";
 import { LuPanelLeftOpen, LuPanelLeftClose } from "react-icons/lu";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Dashboard",
     icon: HiOutlineHome,
     roles: ["owner", "admin", "moderator", "user"],
+  },
+  {
+    href: "/dashboard/projects",
+    label: "Projects",
+    icon: HiOutlineBuildingLibrary,
+    roles: ["owner", "admin"],
   },
   {
     href: "/dashboard/packages",

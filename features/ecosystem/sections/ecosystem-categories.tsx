@@ -44,19 +44,14 @@ const CATEGORIES: {
   },
 ];
 
-const UPCOMING = {
-  icon: HiOutlineBuildingLibrary,
-  title: "Projects",
-  description: "Products and experiments built by Gablura.",
-  detail: "Full-stack applications that solve real problems. Coming soon.",
-};
-
 interface EcosystemCategoriesProps {
   counts: Record<ResourceType, number>;
+  projectCount: number;
 }
 
 export default function EcosystemCategories({
   counts,
+  projectCount,
 }: EcosystemCategoriesProps) {
   return (
     <section
@@ -119,36 +114,40 @@ export default function EcosystemCategories({
             );
           })}
 
-          {/* Upcoming category */}
-          <article className="flex h-full flex-col rounded-xl border border-dashed border-border-subtle bg-surface/50 p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-surface-elevated">
-                <UPCOMING.icon className="size-5 text-muted-foreground" />
+          {/* Projects category */}
+          <Link href="/projects" className="group block">
+            <article className="flex h-full flex-col rounded-xl border border-border-subtle bg-surface p-6 transition-colors duration-200 hover:border-border hover:bg-surface-hover">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-accent/10">
+                  <HiOutlineBuildingLibrary className="size-5 text-accent" />
+                </div>
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-muted">
+                  Projects
+                </span>
               </div>
-              <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-text-muted">
-                {UPCOMING.title}
-              </span>
-            </div>
 
-            <div className="mt-5">
-              <h3 className="text-lg font-semibold text-muted-foreground">
-                {UPCOMING.title}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {UPCOMING.description}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {UPCOMING.detail}
-              </p>
-            </div>
+              <div className="mt-5">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Projects
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Products and applications built by Gablura.
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Full-stack applications that solve real problems.
+                </p>
+              </div>
 
-            <div className="mt-auto pt-5 border-t border-border-subtle">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-0.5 text-[10px] font-mono font-medium uppercase tracking-wider text-text-muted">
-                <span className="size-1 rounded-full bg-warning" />
-                Coming soon
-              </span>
-            </div>
-          </article>
+              <div className="mt-auto flex items-center justify-between pt-5 border-t border-border-subtle">
+                <span className="text-xs font-mono text-text-muted tracking-wide">
+                  {projectCount} {projectCount === 1 ? "project" : "projects"}
+                </span>
+                <span className="text-xs font-medium text-accent transition-colors duration-200 group-hover:text-accent-hover">
+                  View all →
+                </span>
+              </div>
+            </article>
+          </Link>
         </div>
       </div>
     </section>

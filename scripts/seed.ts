@@ -310,6 +310,39 @@ const TOOLS = [
   },
 ];
 
+const PROJECTS = [
+  {
+    name: "Focura",
+    slug: "focura",
+    tagline: "Focus Smarter. Manage Workspaces, Projects & Teams.",
+    description:
+      "A hyper-productivity OS that combines task management, focus sessions, burnout prevention, wellness tracking, AI assistance, and billing into one integrated platform. Built for teams that want to work smarter, not harder.",
+    techStack: [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Express.js",
+      "PostgreSQL",
+      "Prisma",
+      "Redis",
+      "BullMQ",
+      "Google Gemini AI",
+      "Lemon Squeezy",
+    ],
+    frontendUrl: "https://gablura.vercel.app",
+    backendUrl: "https://gablura-backend-vr75.onrender.com",
+    repositoryUrl: "https://github.com/gaziraihan1/gablura-client",
+    imageUrl: "",
+    featured: true,
+    status: "active",
+    authorId: "system",
+    authorName: "Gablura",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
 async function seed() {
   try {
     await client.connect();
@@ -345,6 +378,16 @@ async function seed() {
       console.log(`Inserted ${result.insertedCount} tools`);
     } else {
       console.log(`Skipping tools — ${existingTools} already exist`);
+    }
+
+    // Insert Projects
+    const projCol = db.collection("projects");
+    const existingProjects = await projCol.countDocuments();
+    if (existingProjects === 0) {
+      const result = await projCol.insertMany(PROJECTS);
+      console.log(`Inserted ${result.insertedCount} projects`);
+    } else {
+      console.log(`Skipping projects — ${existingProjects} already exist`);
     }
 
     console.log("Done!");

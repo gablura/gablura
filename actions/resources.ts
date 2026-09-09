@@ -1,42 +1,18 @@
 "use server";
 
-import { getServerSession } from "next-auth";
-import { getAuthOptions } from "@/lib/auth";
 import { ROLE_HIERARCHY } from "@/types/roles";
-import type { Role } from "@/types/roles";
 import type { Resource, ResourceType, ResourceFormData } from "@/types/resources";
+import { authenticate, canModify, buildRoleQuery } from "@/lib/auth-helpers";
 import { docToResource, getCollection, type ResourceDoc } from "@/lib/resource-helpers";
 import { generateSlug } from "@/lib/slug";
 import { ObjectId } from "mongodb";
-
-async function authenticate() {
-  const session = await getServerSession(await getAuthOptions());
-  if (!session?.user) return null;
-  return {
-    id: session.user.id as string,
-    name: (session.user.name ?? session.user.email?.split("@")[0]) as string,
-    role: (session.user.role ?? "user") as Role,
-  };
-}
-
-function canModify(callerId: string, callerRole: Role, resource: Resource): boolean {
-  if (callerRole === "owner") return true;
-  return resource.authorId === callerId;
-}
 
 export async function getResources(type: ResourceType) {
   const caller = await authenticate();
   if (!caller) return [];
 
   const col = await getCollection(type);
-  let query: Record<string, unknown>;
-  if (caller.role === "owner") {
-    query = {};
-  } else if (caller.role === "admin") {
-    query = { $or: [{ authorId: caller.id }, { authorId: "system" }] };
-  } else {
-    query = { authorId: caller.id };
-  }
+  const query = buildRoleQuery(caller.role, caller.id);
   const docs = await col.find(query).sort({ createdAt: -1 }).toArray();
   return docs.map(docToResource);
 }
@@ -96,7 +72,7 @@ export async function updateResource(
 
   if (!doc) return { error: "Resource not found" };
 
-  if (!canModify(caller.id, caller.role, docToResource(doc))) {
+  if (!canModify(caller.role, caller.id, docToResource(doc).authorId)) {
     return { error: "You can only edit your own resources" };
   }
 
@@ -139,7 +115,7 @@ export async function deleteResource(type: ResourceType, resourceId: string) {
 
   if (!doc) return { error: "Resource not found" };
 
-  if (!canModify(caller.id, caller.role, docToResource(doc))) {
+  if (!canModify(caller.role, caller.id, docToResource(doc).authorId)) {
     return { error: "You can only delete your own resources" };
   }
 

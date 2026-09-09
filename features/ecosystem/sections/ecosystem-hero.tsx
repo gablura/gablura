@@ -2,10 +2,11 @@ import type { ResourceType } from "@/types/resources";
 
 interface EcosystemHeroProps {
   counts: Record<ResourceType, number>;
+  projectCount: number;
 }
 
-export default function EcosystemHero({ counts }: EcosystemHeroProps) {
-  const total = counts.package + counts.sdk + counts.tool;
+export default function EcosystemHero({ counts, projectCount }: EcosystemHeroProps) {
+  const total = counts.package + counts.sdk + counts.tool + projectCount;
 
   return (
     <section className="relative overflow-hidden pb-16 pt-24 sm:pt-32">
@@ -57,6 +58,7 @@ export default function EcosystemHero({ counts }: EcosystemHeroProps) {
               { label: "Packages", count: counts.package },
               { label: "SDKs", count: counts.sdk },
               { label: "Tools", count: counts.tool },
+              { label: "Projects", count: projectCount },
             ].map((item) => (
               <div key={item.label} className="text-center">
                 <p className="text-lg font-semibold text-foreground">
