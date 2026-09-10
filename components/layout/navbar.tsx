@@ -29,12 +29,20 @@ export default function Navbar() {
 
   useEffect(() => {
     if (mobileOpen) {
-      document.body.style.overflow = "hidden";
+      const scrollY = window.scrollY;
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+      document.body.style.overscrollBehavior = "none";
+      window.scrollTo(0, scrollY);
     } else {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.style.touchAction = "";
+      document.body.style.overscrollBehavior = "";
     }
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      document.body.style.touchAction = "";
+      document.body.style.overscrollBehavior = "";
     };
   }, [mobileOpen]);
 
@@ -158,7 +166,7 @@ export default function Navbar() {
         }`}
         aria-hidden={!mobileOpen}
       >
-        {/* Backdrop — fully opaque */}
+        {/* Backdrop — only covers area behind menu */}
         <div
           className={`absolute inset-0 bg-background transition-opacity duration-300 ${
             mobileOpen ? "opacity-100" : "opacity-0"
@@ -166,9 +174,9 @@ export default function Navbar() {
           onClick={() => setMobileOpen(false)}
         />
 
-        {/* Content */}
+        {/* Scrollable menu content */}
         <nav
-          className={`relative mx-auto flex w-full max-w-container flex-col px-container transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          className={`relative z-10 mx-auto flex w-full max-w-container flex-1 flex-col overflow-y-auto px-container transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             mobileOpen ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
           }`}
           aria-label="Mobile"
