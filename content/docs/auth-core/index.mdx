@@ -1,0 +1,70 @@
+export const metadata = {
+  title: "@gablura/auth-core",
+  description: "Production-ready authentication infrastructure for full-stack applications.",
+  version: "1.2.4",
+  status: "stable",
+  package: "@gablura/auth-core",
+  repository: "https://github.com/gablura/auth",
+  license: "MIT",
+};
+
+# @gablura/auth-core
+
+Production-ready authentication infrastructure for full-stack applications.
+
+`@gablura/auth-core` is the backend foundation of the Gablura auth system. It provides a complete authentication pipeline — token exchange, session binding, refresh rotation, account lockout, 2FA, and audit logging — as a single, configurable module.
+
+## Why it exists
+
+Most developers face the same authentication problems repeatedly:
+
+- Implementing secure token storage and rotation
+- Preventing session hijacking across devices
+- Handling account lockout after failed attempts
+- Adding 2FA without rewriting the entire auth layer
+- Maintaining audit logs for compliance
+
+`@gablura/auth-core` solves these problems once, so you can focus on building your application.
+
+## Features
+
+- **Dual-token architecture** — Access + refresh tokens with RS256 signing
+- **Token rotation** — Automatic refresh token rotation with reuse detection
+- **Session binding** — Device fingerprint + IP validation to prevent hijacking
+- **Account lockout** — Configurable failed attempt thresholds with automatic unlock
+- **Two-factor authentication** — TOTP-based 2FA with backup codes
+- **Audit logging** — Structured auth event logging with severity levels
+- **Redis-backed** — Session management, caching, and revocation via Redis
+- **Express middleware** — Drop-in middleware factory for Express applications
+- **Cache layer** — Optional auth result and user profile caching
+- **Idempotent exchanges** — Duplicate request protection for token exchange
+
+## Architecture
+
+```text
+Browser
+  ↓
+NextAuth (HMAC proof)
+  ↓
+@gablura/auth-core
+  ↓
+Express Backend
+  ↓
+Redis + MongoDB
+```
+
+The core module sits between your auth provider (NextAuth, custom JWT, etc.) and your backend. It validates proofs, manages tokens, enforces sessions, and logs everything.
+
+### Internal modules
+
+```text
+TokenManager        — RS256 JWT signing and verification
+TokenRevocation     — Refresh token rotation with atomic Redis operations
+SessionManager      — Session tracking with LRU eviction
+SessionBinding      — Device fingerprint + IP validation
+AccountLockout      — Failed attempt tracking with auto-unlock
+AuditLog            — Structured event logging
+MiddlewareFactory   — Express middleware composition
+```
+
+Each module is independently configurable and can be extended or replaced.

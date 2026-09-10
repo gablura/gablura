@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Configuration",
+  description: "Configuration options for @gablura/auth-next.",
+};
+
+# Configuration
+
+## AuthNextConfig
+
+```typescript
+interface AuthNextConfig {
+  backendUrl?: string;          // Backend URL (default: env.BACKEND_URL)
+  hmacSecret: string;           // Required — shared with backend
+  nextAuthSecret?: string;      // Optional — defaults to hmacSecret
+  google?: {
+    clientId: string;
+    clientSecret: string;
+  };
+  pages?: {
+    signIn?: string;
+    error?: string;
+  };
+  adapter?: unknown;            // PrismaAdapter, DrizzleAdapter, etc.
+  dataStore: DataStore;         // Required — database operations
+  userStore: {
+    findByEmail(email: string): Promise<User | null>;
+    findById(id: string): Promise<User | null>;
+    update?(id: string, data: Record<string, unknown>): Promise<void>;
+  };
+  callbackRoutes?: {
+    success?: string;           // After login (default: "/authentication/success")
+    login?: string;             // Sign-in page
+    register?: string;          // Register page
+    twoFactor?: string;         // 2FA page
+    verifyEmail?: string;       // After email verified
+    verifyEmailPage?: string;   // Verify-email page in emails
+    forgotPassword?: string;    // Forgot password
+    resetPassword?: string;     // Reset password
+    error?: string;             // Error page
+  };
+  sessionMaxAge?: number;       // Default: 7 days (seconds)
+  sessionUpdateAge?: number;    // Default: 24 hours (seconds)
+}
+```
+
+## DataStore
+
+The `dataStore` is required and makes the package ORM-agnostic:
+
+```typescript
+interface DataStore {
+  findUserByEmail(email: string): Promise<User | null>;
+  createUser(data: { name?: string; email: string; password?: string }): Promise<{ id: string }>;
+  updateUserByEmail(email: string, data: Record<string, unknown>): Promise<void>;
+  createVerificationToken(data: { identifier: string; token: string; expires: Date }): Promise<void>;
+  findVerificationToken(token: string): Promise<{ identifier: string; expires: Date } | null>;
+  deleteVerificationToken(token: string, identifier: string): Promise<void>;
+  createPasswordResetToken(data: { email: string; token: string; expires: Date }): Promise<void>;
+  findPasswordResetToken(token: string): Promise<{ email: string; token: string } | null>;
+  deletePasswordResetToken(email: string): Promise<void>;
+}
+```

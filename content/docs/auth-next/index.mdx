@@ -1,0 +1,85 @@
+export const metadata = {
+  title: "@gablura/auth-next",
+  description: "Production-ready Next.js authentication with NextAuth.js.",
+  version: "1.2.4",
+  status: "stable",
+  package: "@gablura/auth-next",
+  repository: "https://github.com/gablura/focura-auth",
+  license: "MIT",
+};
+
+# @gablura/auth-next
+
+Production-ready Next.js authentication with NextAuth.js. Drop-in auth with credentials, Google OAuth, 2FA, email verification, and password reset.
+
+## Why it exists
+
+NextAuth handles session management and OAuth. This package adds what NextAuth does not provide out of the box:
+
+| Feature | NextAuth alone | With @gablura/auth-next |
+|---------|---------------|----------------------|
+| HMAC token exchange to backend | Manual | Built-in |
+| Silent token refresh with dedup | Manual | Built-in |
+| 2FA (TOTP) | Requires third-party adapter | Built-in |
+| Email verification | Manual | API handler + UI |
+| Password reset | Manual | API handler + UI |
+| Rate limiting on auth routes | Manual | Built-in |
+| Pre-built login/register UI | Build yourself | Drop-in components |
+| Custom UI hooks | N/A | useAuthForm, etc. |
+| Account lockout | Manual | Via backend |
+| Session binding (fingerprint) | Manual | Via backend |
+
+## Features
+
+- **NextAuth.js** with JWT strategy
+- **Credentials + Google OAuth** providers
+- **2FA (TOTP)** for both credential and OAuth logins
+- **Email verification** with token-based flow
+- **Password reset** with email delivery
+- **Token exchange** — HMAC-signed proof to backend
+- **Silent refresh** — Automatic token renewal
+- **Pre-built UI components** — Login, register, forgot/reset password, email verification
+- **React hooks** — Build your own custom UI with form logic
+- **API route handlers** — Ready-to-use Next.js route handlers
+- **ORM-agnostic** — Works with Prisma, Drizzle, MongoDB, or any custom backend
+
+## Next.js Compatibility
+
+| Next.js Version | Status |
+|-----------------|--------|
+| v14.x | Supported |
+| v15.x | Supported |
+| v16.x | Supported (requires `next-auth@4.24.14+`) |
+
+## Two ways to use
+
+### Option A: Pre-built Components
+
+```tsx
+import { AuthPage, ForgotPasswordPage, ResetPasswordPage, VerifyEmailPage } from "@gablura/auth-next/components";
+
+// Full auth UI with zero custom code
+```
+
+### Option B: Custom UI (Hooks)
+
+```tsx
+"use client";
+import { useAuthForm } from "@gablura/auth-next/hooks";
+
+export default function MyLogin() {
+  const { register, handleSubmit, errors, isSubmitting, onSubmit, handleGoogle } = useAuthForm({
+    mode: "login",
+    callbackUrl: "/dashboard",
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register("email")} placeholder="Email" />
+      <input {...register("password")} type="password" placeholder="Password" />
+      <button type="submit" disabled={isSubmitting}>Sign in</button>
+      <button type="button" onClick={handleGoogle}>Google</button>
+    </form>
+  );
+}
+```

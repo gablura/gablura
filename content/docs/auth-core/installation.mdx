@@ -1,0 +1,62 @@
+export const metadata = {
+  title: "Installation",
+  description: "How to install and set up @gablura/auth-core.",
+};
+
+# Installation
+
+## Requirements
+
+- **Node.js** >= 22
+- **Redis** >= 6 (for session management and caching)
+- **Express** 4 or 5 (for middleware integration)
+
+## Install
+
+```bash
+npm install @gablura/auth-core ioredis
+```
+
+```bash
+pnpm add @gablura/auth-core ioredis
+```
+
+```bash
+yarn add @gablura/auth-core ioredis
+```
+
+## Peer dependencies
+
+| Package | Version | Required |
+|---------|---------|----------|
+| `ioredis` | >= 5 | Yes |
+| `express` | 4 or 5 | For middleware |
+
+## RSA key generation
+
+`@gablura/auth-core` uses RS256 (RSA + SHA-256) for JWT signing. You need to generate an RSA key pair.
+
+```bash
+# Generate private key
+openssl genpkey -algorithm RSA -out private-key.pem -pkeyopt rsa_keygen_bits:2048
+
+# Extract public key
+openssl rsa -pubout -in private-key.pem -out public-key.pem
+```
+
+Store these securely. Never commit them to version control.
+
+## Environment variables
+
+```bash
+# Required
+REDIS_URL=redis://localhost:6379
+AUTH_PRIVATE_KEY=path/to/private-key.pem
+AUTH_PUBLIC_KEY=path/to/public-key.pem
+
+# Optional
+AUTH_SESSION_TTL=1800
+AUTH_REFRESH_TTL=2592000
+AUTH_LOCKOUT_THRESHOLD=5
+AUTH_LOCKOUT_WINDOW=900
+```

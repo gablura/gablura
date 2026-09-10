@@ -1,0 +1,116 @@
+export const metadata = {
+  title: "Usage",
+  description: "How to use @gablura/auth-next in your application.",
+};
+
+# Usage
+
+## Pre-built Components
+
+All components are imported from `@gablura/auth-next/components`.
+
+### AuthPage
+
+Full-screen login/register page with toggle.
+
+```tsx
+import { AuthPage } from "@gablura/auth-next/components";
+
+<AuthPage callbackUrl="/dashboard" />
+```
+
+### ForgotPasswordPage
+
+```tsx
+import { ForgotPasswordPage } from "@gablura/auth-next/components";
+
+<ForgotPasswordPage />
+```
+
+### ResetPasswordPage
+
+```tsx
+import { ResetPasswordPage } from "@gablura/auth-next/components";
+
+<ResetPasswordPage token={searchParams.get("token")} />
+```
+
+### VerifyEmailPage
+
+```tsx
+import { VerifyEmailPage } from "@gablura/auth-next/components";
+
+<VerifyEmailPage token={searchParams.get("token")} />
+```
+
+## Hooks
+
+All hooks are imported from `@gablura/auth-next/hooks`.
+
+### useAuthForm
+
+```tsx
+"use client";
+import { useAuthForm } from "@gablura/auth-next/hooks";
+
+function MyForm() {
+  const {
+    register,
+    handleSubmit,
+    errors,
+    isSubmitting,
+    onSubmit,
+    handleGoogle,
+    formError,
+    clearFormError,
+  } = useAuthForm({
+    mode: "login",
+    callbackUrl: "/dashboard",
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register("email")} />
+      {errors.email && <span>{errors.email.message}</span>}
+      <input {...register("password")} type="password" />
+      <button type="submit" disabled={isSubmitting}>Sign in</button>
+      <button type="button" onClick={handleGoogle}>Google</button>
+    </form>
+  );
+}
+```
+
+### useForgetPasswordPage
+
+```tsx
+const { error, success, register, handleSubmit, errors, isSubmitting, onSubmit } = useForgetPasswordPage();
+```
+
+### useResetPasswordPage
+
+```tsx
+const { error, success, register, handleSubmit, errors, isSubmitting, onSubmit } = useResetPasswordPage({ token });
+```
+
+### useVerifyEmail
+
+```tsx
+const { status, message } = useVerifyEmail({ token });
+```
+
+## API Route Handlers
+
+All handlers are imported from `@gablura/auth-next/api`.
+
+| Handler | Purpose |
+|---------|---------|
+| `handleRegister` | User registration |
+| `handleForgotPassword` | Send reset email |
+| `handleResetPassword` | Reset password with token |
+| `handleVerifyEmail` | Verify email with token |
+
+## Email Functions
+
+```typescript
+import { sendVerificationEmail, sendPasswordResetEmail } from "@gablura/auth-next/email";
+```

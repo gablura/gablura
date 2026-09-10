@@ -1,0 +1,129 @@
+export const metadata = {
+  title: "API Reference",
+  description: "Complete API reference for @gablura/auth-core.",
+};
+
+# API Reference
+
+## AuthService
+
+### `exchange(params)`
+
+Exchange an HMAC proof for token pair.
+
+```ts
+auth.exchange({
+  proof: string,        // HMAC proof from auth provider
+  userId: string,       // User identifier
+  deviceId: string,     // Device identifier
+}): Promise<ExchangeResult>
+```
+
+**ExchangeResult:**
+
+```ts
+{ ok: true, accessToken: string, refreshToken: string }
+| { ok: false, error: string }
+```
+
+### `verify(params)`
+
+Verify an access token.
+
+```ts
+auth.verify({
+  token: string,        // Access token JWT
+  deviceId: string,     // Expected device ID
+}): Promise<VerifyResult>
+```
+
+**VerifyResult:**
+
+```ts
+{ ok: true, userId: string, sessionId: string }
+| { ok: false, error: string }
+```
+
+### `refresh(params)`
+
+Rotate a refresh token and issue new pair.
+
+```ts
+auth.refresh({
+  refreshToken: string,  // Current refresh token
+  deviceId: string,     // Device identifier
+}): Promise<RefreshResult>
+```
+
+### `logout(params)`
+
+Revoke a refresh token.
+
+```ts
+auth.logout({
+  refreshToken: string,
+}): Promise<{ ok: boolean }>
+```
+
+### `enable2FA(params)`
+
+Generate a TOTP secret for 2FA enrollment.
+
+```ts
+auth.enable2FA({
+  userId: string,
+}): Promise<{ secret: string, backupCodes: string[] }>
+```
+
+### `verify2FA(params)`
+
+Verify a TOTP code.
+
+```ts
+auth.verify2FA({
+  userId: string,
+  code: string,         // 6-digit TOTP code
+}): Promise<{ ok: boolean }>
+```
+
+### `getSessions(params)`
+
+List active sessions for a user.
+
+```ts
+auth.getSessions({
+  userId: string,
+}): Promise<Session[]>
+```
+
+### `revokeSession(params)`
+
+Revoke a single session.
+
+```ts
+auth.revokeSession({
+  sessionId: string,
+}): Promise<{ ok: boolean }>
+```
+
+### `revokeAllSessions(params)`
+
+Revoke all sessions for a user.
+
+```ts
+auth.revokeAllSessions({
+  userId: string,
+}): Promise<{ ok: boolean }>
+```
+
+## Error classes
+
+| Class | Status | Error Code |
+|-------|--------|------------|
+| `AuthError` | 401 | `AUTH_ERROR` |
+| `TokenExpiredError` | 401 | `TOKEN_EXPIRED` |
+| `TokenRevokedError` | 401 | `TOKEN_REVOKED` |
+| `SessionBindingError` | 401 | `SESSION_BINDING_FAILED` |
+| `AccountLockedError` | 423 | `ACCOUNT_LOCKED` |
+| `InvalidProofError` | 401 | `INVALID_PROOF` |
+| `RateLimitError` | 429 | `RATE_LIMIT_EXCEEDED` |

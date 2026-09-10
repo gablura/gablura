@@ -1,0 +1,41 @@
+export const metadata = {
+  title: "FAQ",
+  description: "Frequently asked questions about @gablura/auth-core.",
+};
+
+# FAQ
+
+## Can I use this without NextAuth?
+
+Yes. `@gablura/auth-core` is backend-only. You can use any auth provider that can issue an HMAC proof, or build your own.
+
+## Can I use this without Express?
+
+Yes. The `AuthService` class is framework-agnostic. You can use it with Fastify, Hono, or any Node.js HTTP server. The `MiddlewareFactory` is Express-specific, but the core service works everywhere.
+
+## What Redis versions are supported?
+
+Redis 6 and above. The module uses features like Lua scripting and pipelines that are available in all modern Redis versions.
+
+## Can I use this with App Router?
+
+Yes. `@gablura/auth-next` provides App Router support. `@gablura/auth-core` works with any Next.js routing model.
+
+## How do I rotate RSA keys?
+
+Generate new keys and update the environment variables. Existing tokens signed with the old key will remain valid until they expire. New tokens will use the new key.
+
+## What happens if Redis goes down?
+
+The behavior depends on your configuration:
+
+- **Without cache**: Auth still works, but session management and revocation stop working
+- **With cache**: Cached results continue to work, but new verifications hit the database
+
+## How do I handle deployment?
+
+During deployment, existing sessions remain valid as long as Redis is persistent. If you restart Redis, all sessions are lost and users must re-authenticate.
+
+## Can I use this with MongoDB?
+
+Yes. Implement the `UserStore` interface to connect to MongoDB. The module doesn't assume any specific database.

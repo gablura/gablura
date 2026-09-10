@@ -1,0 +1,74 @@
+export const metadata = {
+  title: "Configuration",
+  description: "All configuration options for @gablura/auth-core.",
+};
+
+# Configuration
+
+## AuthCoreConfig
+
+The `AuthService` constructor accepts a configuration object:
+
+```ts
+const auth = new AuthService({
+  privateKey: "path/to/private-key.pem",
+  publicKey: "path/to/public-key.pem",
+  redis,
+  // ... optional config
+});
+```
+
+### Required options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `privateKey` | `string` | Path to RSA private key (PEM format) |
+| `publicKey` | `string` | Path to RSA public key (PEM format) |
+| `redis` | `Redis` | ioredis instance for session/cache storage |
+
+### Optional options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `sessionTTL` | `number` | `1800` | Access token lifetime in seconds (30 min) |
+| `refreshTTL` | `number` | `2592000` | Refresh token lifetime in seconds (30 days) |
+| `lockoutThreshold` | `number` | `5` | Failed attempts before lockout |
+| `lockoutWindow` | `number` | `900` | Lockout duration in seconds (15 min) |
+| `cacheEnabled` | `boolean` | `false` | Enable auth result caching |
+| `cacheAuthTTL` | `number` | `300` | Auth cache TTL in seconds (5 min) |
+| `cacheUserTTL` | `number` | `1800` | User profile cache TTL in seconds (30 min) |
+| `maxConcurrentSessions` | `number` | `10` | Max sessions per user |
+| `keyPrefix` | `string` | `auth:` | Redis key prefix |
+| `serverSecret` | `string` | — | Secret for server-to-server binding bypass |
+| `trustedProxies` | `string[]` | `[]` | CIDR ranges for X-Forwarded-For validation |
+
+## Defaults
+
+```ts
+const DEFAULTS = {
+  sessionTTL: 1800,        // 30 minutes
+  refreshTTL: 2592000,     // 30 days
+  lockoutThreshold: 5,
+  lockoutWindow: 900,      // 15 minutes
+  cacheEnabled: false,
+  cacheAuthTTL: 300,       // 5 minutes
+  cacheUserTTL: 1800,      // 30 minutes
+  maxConcurrentSessions: 10,
+  keyPrefix: "auth:",
+};
+```
+
+## Resolving configuration
+
+Use `resolveConfig` to merge user options with defaults:
+
+```ts
+import { resolveConfig } from "@gablura/auth-core";
+
+const config = resolveConfig({
+  privateKey: process.env.AUTH_PRIVATE_KEY!,
+  publicKey: process.env.AUTH_PUBLIC_KEY!,
+  redis,
+  lockoutThreshold: 10, // override default
+});
+```

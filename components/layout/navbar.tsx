@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/packages", label: "Packages" },
   { href: "/sdks", label: "SDKs" },
   { href: "/tools", label: "Tools" },
+  { href: "/docs", label: "Docs" },
   { href: "/about", label: "About" },
 ];
 

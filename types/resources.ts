@@ -1,4 +1,4 @@
-export type ResourceType = "package" | "tool" | "sdk";
+export type ResourceType = "package" | "tool" | "sdk" | "project";
 
 export interface Resource {
   id: string;
@@ -50,10 +50,12 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   package: "Packages",
   tool: "Tools",
   sdk: "SDKs",
+  project: "Projects",
 };
 
 export const RESOURCE_TYPE_SINGULAR: Record<ResourceType, string> = {
   package: "Package",
   tool: "Tool",
   sdk: "SDK",
+  project: "Project",
 };

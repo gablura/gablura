@@ -248,6 +248,7 @@
   html {
     color-scheme: dark;
     font-family: var(--font-sans);
+    overflow-x: clip;
   }
 
   html.light {
@@ -257,5 +258,17 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    overflow-x: clip;
+  }
+
+  /* MDX prose styles */
+  .prose-custom > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .prose-custom h1:first-child,
+  .prose-custom h2:first-child,
+  .prose-custom h3:first-child {
+    margin-top: 0;
   }
 }

@@ -1,0 +1,52 @@
+export const metadata = {
+  title: "Changelog",
+  description: "Version history for @gablura/auth-core.",
+};
+
+# Changelog
+
+## 1.2.4
+
+- Fix refresh deduplication race condition
+- Add `serverSecret` for server-to-server binding bypass
+- Add `trustedProxies` for CIDR-aware IP validation
+
+## 1.2.3
+
+- Add `maxConcurrentSessions` with LRU eviction
+- Add `keyPrefix` configuration
+- Improve audit log structured output
+
+## 1.2.2
+
+- Add idempotency keys for token exchange
+- Add refresh deduplication with 30-second TTL
+- Fix session binding for private IP addresses
+
+## 1.2.1
+
+- Add `cacheEnabled` option
+- Add user profile caching with 30-minute TTL
+- Add auth result caching with 5-minute TTL
+
+## 1.2.0
+
+- Add 2FA support (TOTP + backup codes)
+- Add session management API
+- Add account lockout
+- Add audit logging
+
+## 1.1.0
+
+- Add session binding (device fingerprint + IP)
+- Add CSRF protection
+- Add rate limiting middleware
+
+## 1.0.0
+
+- Initial release
+- Dual-token architecture (access + refresh)
+- RS256 JWT signing
+- Token rotation with reuse detection
+- Express middleware factory
+- Redis adapter

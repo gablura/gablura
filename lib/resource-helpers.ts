@@ -83,6 +83,7 @@ export async function getCollection(type: ResourceType) {
     package: "packages",
     tool: "tools",
     sdk: "sdks",
+    project: "projects",
   };
   return db.collection<ResourceDoc>(collections[type]);
 }

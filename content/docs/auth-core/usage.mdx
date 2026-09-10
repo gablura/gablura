@@ -1,0 +1,102 @@
+export const metadata = {
+  title: "Usage",
+  description: "How to use @gablura/auth-core in your application.",
+};
+
+# Usage
+
+## API hierarchy
+
+`@gablura/auth-core` organizes its API into three tiers:
+
+### Primary API
+
+Daily-use operations:
+
+```ts
+auth.exchange({ proof, userId, deviceId })    // Exchange HMAC proof for tokens
+auth.verify({ token, deviceId })              // Verify access token
+auth.refresh({ refreshToken, deviceId })      // Rotate refresh token
+auth.logout({ refreshToken })                 // Revoke refresh token
+auth.enable2FA({ userId })                    // Generate 2FA secret
+auth.verify2FA({ userId, code })              // Verify TOTP code
+auth.getSessions({ userId })                  // List active sessions
+auth.revokeSession({ sessionId })             // Revoke a single session
+auth.revokeAllSessions({ userId })            // Revoke all sessions for user
+```
+
+### Extension API
+
+Additional utilities:
+
+```ts
+auth.recordLoginFailure({ userId })           // Record failed login attempt
+auth.resetLoginFailures({ userId })           // Clear failed login attempts
+auth.checkLockout({ userId })                 // Check if account is locked
+auth.getAuditLog({ userId, limit })           // Retrieve audit events
+```
+
+### Advanced API
+
+Internal access when you need it:
+
+```ts
+auth.getTokenManager()                        // Direct TokenManager access
+auth.getTokenRevocation()                     // Direct TokenRevocation access
+auth.getSessionManager()                      // Direct SessionManager access
+auth.getAccountLockout()                      // Direct AccountLockout access
+auth.getAuditLog()                            // Direct AuditLog access
+auth.getRedis()                               // Direct Redis access
+auth.getConfig()                              // Current resolved config
+auth.invalidateUserCache({ userId })          // Clear user cache
+```
+
+## Express middleware
+
+```ts
+import { MiddlewareFactory } from "@gablura/auth-core";
+
+const mw = new MiddlewareFactory(auth);
+
+// Require valid token
+app.use(mw.verifyToken());
+
+// Optional token (sets req.auth if valid, continues if not)
+app.use(mw.optionalToken());
+
+// Require CSRF validation
+app.use(mw.verifyCsrf());
+
+// Rate limiting
+app.use(mw.rateLimit({ windowMs: 60000, max: 100 }));
+
+// Session timeout
+app.use(mw.sessionTimeout());
+```
+
+## Adapters
+
+Implement these interfaces to connect to your data store:
+
+### UserStore
+
+```ts
+interface UserStore {
+  findUserById(id: string): Promise<User | null>;
+  findUserByEmail(email: string): Promise<User | null>;
+}
+```
+
+### CacheAdapter
+
+```ts
+interface CacheAdapter {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ttl?: number): Promise<void>;
+  del(key: string): Promise<void>;
+}
+```
+
+### RedisAdapter
+
+The built-in Redis adapter handles all session and cache operations. Use it unless you need a custom implementation.

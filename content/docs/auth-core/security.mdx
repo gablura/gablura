@@ -1,0 +1,75 @@
+export const metadata = {
+  title: "Security",
+  description: "Security features and hardening for @gablura/auth-core.",
+};
+
+# Security
+
+## Token architecture
+
+- **RS256 signing** — RSA + SHA-256 for JWT integrity
+- **Token rotation** — Refresh tokens are single-use; each refresh issues a new pair
+- **Reuse detection** — If a revoked refresh token is presented, all sessions for that user are revoked
+- **Idempotent exchanges** — Duplicate token exchange requests return the same tokens
+
+## Session binding
+
+Sessions are bound to a device fingerprint + IP address:
+
+- **Device fingerprint** — Derived from User-Agent headers with normalization
+- **IP validation** — Compares request IP against session IP
+- **Private IP detection** — Handles local/private network addresses correctly
+- **Trusted proxies** — CIDR-aware X-Forwarded-For validation for reverse proxy setups
+
+```ts
+const auth = new AuthService({
+  // ...
+  trustedProxies: ["10.0.0.0/8", "172.16.0.0/12"],
+});
+```
+
+## Server-to-server binding
+
+For backend-to-backend calls where device fingerprints aren't available:
+
+```ts
+const auth = new AuthService({
+  // ...
+  serverSecret: process.env.AUTH_SERVER_SECRET,
+});
+```
+
+When `serverSecret` is set, requests with a valid HMAC proof from the server secret bypass device fingerprint validation.
+
+## Account lockout
+
+Configurable brute-force protection:
+
+```ts
+const auth = new AuthService({
+  // ...
+  lockoutThreshold: 5,    // Lock after 5 failures
+  lockoutWindow: 900,     // Lock for 15 minutes
+});
+```
+
+## CSRF protection
+
+```ts
+app.use(mw.verifyCsrf());
+```
+
+Validates CSRF tokens using timing-safe comparison.
+
+## Rate limiting
+
+```ts
+app.use(mw.rateLimit({
+  windowMs: 60000,   // 1 minute window
+  max: 100,          // 100 requests per window
+}));
+```
+
+## Timing-safe comparisons
+
+All HMAC and CSRF token comparisons use `crypto.timingSafeEqual` to prevent timing attacks.

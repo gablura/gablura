@@ -1,0 +1,51 @@
+export const metadata = {
+  title: "Performance",
+  description: "Performance characteristics and tuning for @gablura/auth-core.",
+};
+
+# Performance
+
+## Caching
+
+When `cacheEnabled: true`, the module caches:
+
+| Data | TTL | Purpose |
+|------|-----|---------|
+| Auth results | 5 min | Avoid repeated token verification |
+| User profiles | 30 min | Reduce database lookups |
+| Refresh dedup | 30 sec | Prevent concurrent refresh races |
+
+## Redis operations
+
+- **Atomic Lua scripts** — Token rotation uses a single Lua script for atomicity
+- **Distributed locks** — Prevents concurrent refresh token rotations
+- **Pipeline operations** — Lockout tracking uses Redis pipelines
+- **LRU eviction** — Max concurrent sessions enforced with least-recently-used eviction
+
+## Tuning
+
+### Increase cache TTL
+
+For high-traffic applications:
+
+```ts
+const auth = new AuthService({
+  // ...
+  cacheEnabled: true,
+  cacheAuthTTL: 600,    // 10 minutes
+  cacheUserTTL: 3600,   // 1 hour
+});
+```
+
+### Adjust session limits
+
+```ts
+const auth = new AuthService({
+  // ...
+  maxConcurrentSessions: 20,  // Allow more concurrent sessions
+});
+```
+
+### Redis memory
+
+Each session uses approximately 200-500 bytes in Redis. For 10,000 concurrent sessions, plan for ~5MB of Redis memory for auth data.

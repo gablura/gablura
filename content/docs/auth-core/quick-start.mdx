@@ -1,0 +1,79 @@
+export const metadata = {
+  title: "Quick Start",
+  description: "Get running with @gablura/auth-core in minutes.",
+};
+
+# Quick Start
+
+## 1. Create the auth service
+
+```ts
+import { AuthService } from "@gablura/auth-core";
+import Redis from "ioredis";
+
+const redis = new Redis(process.env.REDIS_URL!);
+
+const auth = new AuthService({
+  privateKey: process.env.AUTH_PRIVATE_KEY!,
+  publicKey: process.env.AUTH_PUBLIC_KEY!,
+  redis,
+});
+```
+
+## 2. Set up Express middleware
+
+```ts
+import express from "express";
+import { MiddlewareFactory } from "@gablura/auth-core";
+
+const app = express();
+const mw = new MiddlewareFactory(auth);
+
+app.use(mw.verifyToken());
+```
+
+## 3. Exchange a token
+
+```ts
+// After NextAuth (or custom auth) issues an HMAC proof
+app.post("/api/auth/exchange", async (req, res) => {
+  const result = await auth.exchange({
+    proof: req.body.proof,
+    userId: req.body.userId,
+    deviceId: req.body.deviceId,
+  });
+
+  if (result.ok) {
+    res.json({ accessToken: result.accessToken, refreshToken: result.refreshToken });
+  } else {
+    res.status(401).json({ error: result.error });
+  }
+});
+```
+
+## 4. Verify a token
+
+```ts
+app.get("/api/protected", mw.verifyToken(), (req, res) => {
+  res.json({ message: "Authenticated", userId: req.auth.userId });
+});
+```
+
+## 5. Refresh a token
+
+```ts
+app.post("/api/auth/refresh", async (req, res) => {
+  const result = await auth.refresh({
+    refreshToken: req.body.refreshToken,
+    deviceId: req.body.deviceId,
+  });
+
+  if (result.ok) {
+    res.json({ accessToken: result.accessToken, refreshToken: result.refreshToken });
+  } else {
+    res.status(401).json({ error: result.error });
+  }
+});
+```
+
+That's the basic flow. See [Configuration](/docs/auth-core/configuration) for all options and [Usage](/docs/auth-core/usage) for advanced patterns.

@@ -30,12 +30,14 @@ async function getPublishedCounts(): Promise<Record<ResourceType, number>> {
   const col1 = await getCollection("package");
   const col2 = await getCollection("tool");
   const col3 = await getCollection("sdk");
-  const [packages, tools, sdks] = await Promise.all([
+  const col4 = await getCollection("project");
+  const [packages, tools, sdks, projects] = await Promise.all([
     col1.countDocuments({ status: "published" }),
     col2.countDocuments({ status: "published" }),
     col3.countDocuments({ status: "published" }),
+    col4.countDocuments({ status: "published" }),
   ]);
-  return { package: packages, tool: tools, sdk: sdks };
+  return { package: packages, tool: tools, sdk: sdks, project: projects };
 }
 
 export async function getLatestResources(

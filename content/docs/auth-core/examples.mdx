@@ -1,0 +1,107 @@
+export const metadata = {
+  title: "Examples",
+  description: "Code examples for @gablura/auth-core.",
+};
+
+# Examples
+
+## Express integration
+
+```ts
+import express from "express";
+import { AuthService, MiddlewareFactory } from "@gablura/auth-core";
+import Redis from "ioredis";
+
+const redis = new Redis(process.env.REDIS_URL!);
+const auth = new AuthService({
+  privateKey: process.env.AUTH_PRIVATE_KEY!,
+  publicKey: process.env.AUTH_PUBLIC_KEY!,
+  redis,
+  cacheEnabled: true,
+});
+
+const app = express();
+const mw = new MiddlewareFactory(auth);
+
+app.use(express.json());
+
+// Protected route
+app.get("/api/profile", mw.verifyToken(), (req, res) => {
+  res.json({ userId: req.auth.userId, sessionId: req.auth.sessionId });
+});
+
+// Token exchange
+app.post("/api/auth/exchange", async (req, res) => {
+  try {
+    const result = await auth.exchange({
+      proof: req.body.proof,
+      userId: req.body.userId,
+      deviceId: req.body.deviceId,
+    });
+
+    if (result.ok) {
+      res.json({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
+    } else {
+      res.status(401).json({ error: result.error });
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Refresh
+app.post("/api/auth/refresh", async (req, res) => {
+  const result = await auth.refresh({
+    refreshToken: req.body.refreshToken,
+    deviceId: req.body.deviceId,
+  });
+
+  if (result.ok) {
+    res.json({
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } else {
+    res.status(401).json({ error: result.error });
+  }
+});
+```
+
+## Error handling
+
+```ts
+import { AuthError, TokenExpiredError, AccountLockedError } from "@gablura/auth-core";
+
+try {
+  const result = await auth.verify({ token, deviceId });
+  if (!result.ok) {
+    // Handle specific errors
+    if (result.error === "TOKEN_EXPIRED") {
+      // Prompt refresh
+    }
+  }
+} catch (err) {
+  if (err instanceof AccountLockedError) {
+    // Show lockout message
+  } else if (err instanceof AuthError) {
+    // Generic auth error
+  }
+}
+```
+
+## Custom error factory
+
+```ts
+const auth = new AuthService({
+  privateKey: process.env.AUTH_PRIVATE_KEY!,
+  publicKey: process.env.AUTH_PUBLIC_KEY!,
+  redis,
+  errorFactory: (code, message) => {
+    // Custom error formatting
+    return new AppError(code, message);
+  },
+});
+```
