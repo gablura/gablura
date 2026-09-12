@@ -94,7 +94,7 @@ export default function WhoBuilds() {
                     Stack
                   </span>
                   <p className="mt-1 text-sm font-medium text-foreground">
-                    Next.js · TS · Tailwind
+                    Next.js · TS · PostgreSQL · MongoDB
                   </p>
                 </div>
                 <div className="rounded-lg border border-border-subtle bg-background p-3">
