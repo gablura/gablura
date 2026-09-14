@@ -1,9 +1,11 @@
-import type { Resource } from "@/types/resources";
+import type { Resource, ResourceDocumentation } from "@/types/resources";
 
 export type ResourceListItem = Pick<
   Resource,
-  "id" | "type" | "name" | "slug" | "version" | "status" | "featured" | "authorId" | "updatedAt"
->;
+  "id" | "type" | "name" | "slug" | "description" | "version" | "repositoryUrl" | "status" | "featured" | "authorId" | "updatedAt"
+> & {
+  documentation: ResourceDocumentation;
+};
 
 export type ResourceDetail = Omit<Resource, "documentation"> & {
   documentation: Resource["documentation"];
@@ -15,7 +17,10 @@ export function toListItem(resource: Resource): ResourceListItem {
     type: resource.type,
     name: resource.name,
     slug: resource.slug,
+    description: resource.description,
     version: resource.version,
+    repositoryUrl: resource.repositoryUrl,
+    documentation: resource.documentation,
     status: resource.status,
     featured: resource.featured,
     authorId: resource.authorId,
