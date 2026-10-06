@@ -90,7 +90,7 @@ export default function PackageHeader({ pkg }: PackageHeaderProps) {
 
         {/* Actions */}
         <div className="mt-6 flex items-center gap-3">
-          <a href={`/docs/package/${pkg.slug}`}>
+          <a href={`/docs/${pkg.slug}`}>
             <Button variant="default" size="sm" className="gap-2">
               <svg
                 className="size-4"
